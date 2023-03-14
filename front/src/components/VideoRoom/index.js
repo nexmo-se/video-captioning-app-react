@@ -20,6 +20,8 @@ import { useSubscriber } from '../../hooks/useSubscriber';
 import { ControlToolBar } from '../ControlToolBar';
 import { CaptionBar } from '../CaptionBar';
 
+import { CaptionBox } from '../CaptionBox';
+
 export function VideoRoom() {
   const classes = useStyles();
   const { user } = useContext(UserContext);
@@ -142,6 +144,7 @@ export function VideoRoom() {
     </div>
 
     <CaptionBar captions={captions} className={classes.captionsBar} />
+    <CaptionBox captions={captions} />
 
     <ControlToolBar
       className={classes.controlToolbar}

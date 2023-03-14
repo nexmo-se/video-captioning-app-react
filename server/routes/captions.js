@@ -33,6 +33,8 @@ function Router(services) {
       let captionsId = req.app.get(`captionsId-${sessionId}`);
       if (captionsId && captionsId !== null) await stopCaptions(captionsId);
 
+      req.app.set(`captionsId-${sessionId}`, null);
+      
       res.json({});
     } catch (e) {
       next(e)

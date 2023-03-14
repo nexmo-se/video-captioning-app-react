@@ -14,7 +14,7 @@ import { UserContext } from "./context/UserContext";
 
 function App() {
   const [user, setUser] = useState({
-    username: `User-${uuidv4()}`,
+    username: `User-${ Date.now() }`,
     defaultSettings: {
       publishAudio: true,
       publishVideo: true,

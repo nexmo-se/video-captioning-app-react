@@ -37,12 +37,18 @@ export function useSubscriber( { container, session }) {
     (event) => {
       console.log(`[useSubscriber] - onCaptionReceived "${event.caption}" isFinal ${event.isFinal} streamId ${event.streamId}`);
       if (event.isFinal) {
-        setCaptions(prev => [...prev.slice(-2, prev.length), {
-          streamId: event.streamId,
+        // setCaptions(prev => [...prev.slice(-2, prev.length), {
+        //   streamId: event.streamId,
+        //   text: event.caption
+        // }]);
+        const speaker = subscribers.find(s => s.streamId === event.streamId);
+        setCaptions(prev => [...prev, {
+          timestamp: (new Date()).toTimeString(),
+          speaker: speaker? speaker.streamName : event.streamId,
           text: event.caption
         }]);
       }
-    }, []);
+    }, [subscribers]);
 
   const addSubscriber = useCallback(
     (subscriber) => {
@@ -83,6 +89,8 @@ export function useSubscriber( { container, session }) {
                 if (err) {
                   console.log("[useSubscriber] - session.subscribe err");
                 }
+
+                subscriber.streamName = `${subscriber.stream.name}`;
                 addSubscriber(subscriber);
               }
             );

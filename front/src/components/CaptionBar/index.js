@@ -9,9 +9,9 @@ export const CaptionBar = memo(
   ({ captions, className }) => {
     return (
     <div className={className}>
-      {captions.map((caption, index) => (
+      {captions.slice(-3, captions.length).reverse().map((caption, index) => (
         <Typography key={`caption-${index}`} variant="subtitle1" gutterBottom textAlign="center" >
-        {caption.text}
+        {caption.speaker}: {caption.text}
         </Typography> 
       ))}
     </div>);
