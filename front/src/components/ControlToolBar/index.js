@@ -24,7 +24,7 @@ export const ControlToolBar = ({
   // This bar should include mic, camera, chat, screenshare, settings, endCall
   const [visible, setVisible] = useState(true);
   const classes = useStyles();
-  const hiddenTimeoutTimer = 3000;
+  const hiddenTimeoutTimer = 8000;
   let hiddenTimeout = useRef();
 
   const setHiddenTimeout = useCallback(() => {

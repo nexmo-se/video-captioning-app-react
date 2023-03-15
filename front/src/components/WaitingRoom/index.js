@@ -11,6 +11,7 @@ import { VideoSettings } from '../VideoSetting';
 
 import { getSourceDeviceId } from '../../utils';
 import {
+  TextField,
   List,
   ListItem,
   Button,
@@ -18,8 +19,7 @@ import {
   Grid,
   InputLabel,
   MenuItem,
-  Select,
-  Typography
+  Select
 } from '@mui/material';
 
 const defaultLocalAudio = true;
@@ -103,6 +103,9 @@ export function WaitingRoom() {
   );
 
   const handleJoinClick = () => {
+    if (!user.username) {
+      setUser({...user, username: `U${ Date.now() }`});
+    }
     navigate('/video-room');
     // navigate({
     //   pathname: '/video-room',
@@ -198,11 +201,51 @@ export function WaitingRoom() {
       justifyContent="center"
       alignItems="center"
     >
-      <Typography textAlign="left" variant="caption" display="block" gutterBottom sx={{mt: 5}}>
-       Hello, {username}
-      </Typography>
+      <AudioSettings
+        hasAudio={localAudio}
+        onAudioChange={handleAudioChange}
+      />
+      <VideoSettings
+        hasVideo={localVideo}
+        onVideoChange={handleVideoChange}
+      />
 
-      <List>
+      <div
+        id="waiting-room-video-container"
+        className={classes.waitingRoomVideoPreview}
+        ref={waitingRoomVideoContainerRef}
+      ></div>
+
+      <List
+        disablePadding
+        sx={{ 
+          width: '100%', 
+          maxWidth: 360
+        }}>
+      
+      <ListItem disablePadding>
+      <FormControl margin="dense">
+        <InputLabel id="audio-output">Select Audio Output</InputLabel>
+        {deviceInfo.audioOutputDevices && (
+          <Select
+            labelId="audio-output"
+            id="audio-output-select"
+            value={audioOutputDevice}
+            onChange={handleAudioOutput}
+            sx={{ 
+              width: 360,
+            }}
+          >
+            {deviceInfo.audioOutputDevices.map((device, index) => (
+              <MenuItem key={index} value={device.deviceId}>
+                {device.label}
+              </MenuItem>
+            ))}
+          </Select>
+        )}
+      </FormControl>
+      </ListItem>
+
       <ListItem disablePadding>
       <FormControl margin="dense">
         <InputLabel id="audio-input">
@@ -228,29 +271,6 @@ export function WaitingRoom() {
       
       <ListItem disablePadding>
       <FormControl margin="dense">
-        <InputLabel id="audio-output">Select Audio Output</InputLabel>
-        {deviceInfo.audioOutputDevices && (
-          <Select
-            labelId="audio-output"
-            id="audio-output-select"
-            value={audioOutputDevice}
-            onChange={handleAudioOutput}
-            sx={{ 
-              width: 360,
-            }}
-          >
-            {deviceInfo.audioOutputDevices.map((device, index) => (
-              <MenuItem key={index} value={device.deviceId}>
-                {device.label}
-              </MenuItem>
-            ))}
-          </Select>
-        )}
-      </FormControl>
-      </ListItem>
-      
-      <ListItem disablePadding>
-      <FormControl margin="dense">
         <InputLabel id="video">Select Video Source</InputLabel>
         {deviceInfo.videoInputDevices && (
           <Select
@@ -271,29 +291,29 @@ export function WaitingRoom() {
         )}
       </FormControl>
       </ListItem>
+      <ListItem disablePadding>
+      <FormControl margin="dense">
+        <TextField
+          id="username"
+          label="*Your Name"
+          value={user.username}
+          onChange={(event) => {
+            setUser({...user, username: event.target.value});
+          }}
+          sx={{ 
+            width: 360,
+          }}
+        />
+        </FormControl>
+        </ListItem>
       </List>
 
-      <div
-        id="waiting-room-video-container"
-        className={classes.waitingRoomVideoPreview}
-        ref={waitingRoomVideoContainerRef}
-      ></div>
-
-      <AudioSettings
-        hasAudio={localAudio}
-        onAudioChange={handleAudioChange}
-      />
-      <VideoSettings
-        hasVideo={localVideo}
-        onVideoChange={handleVideoChange}
-      />
       <Button
         variant="contained"
         onClick={handleJoinClick}
       >
       Join Call
       </Button>
-
     </Grid>
   );
 }

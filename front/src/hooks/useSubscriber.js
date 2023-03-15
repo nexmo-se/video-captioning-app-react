@@ -43,7 +43,7 @@ export function useSubscriber( { container, session }) {
         // }]);
         const speaker = subscribers.find(s => s.streamId === event.streamId);
         setCaptions(prev => [...prev, {
-          timestamp: (new Date()).toTimeString(),
+          timestamp: `${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getMinutes()}`,
           speaker: speaker? speaker.streamName : event.streamId,
           text: event.caption
         }]);

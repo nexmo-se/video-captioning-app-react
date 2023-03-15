@@ -15,7 +15,7 @@ const defaultPublisherOptions = {
     buttonDisplayMode: 'on',
     nameDisplayMode: 'on',
   },
-  showControls: true,
+  showControls: false,
   fitMode: 'contain',
 };
 

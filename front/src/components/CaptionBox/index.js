@@ -47,31 +47,29 @@ export const CaptionBox = React.memo(
         onClick={handleClickOpen()}>Transcription</Button>
 
       <Dialog
+        PaperProps={{ sx: { position: "fixed", top:'5%', right: 10, m: 0, bottom:'10%'} }}
         fullWidth={true}
-        maxWidth="md"
+        maxWidth="sm"
         open={open}
         onClose={handleClose}
         scroll="paper"
-        aria-labelledby="scroll-dialog-title"
+        aria-labelledby="scroll-dialog--title"
         aria-describedby="scroll-dialog-description"
       >
-        <DialogTitle id="scroll-dialog-title">Transcription</DialogTitle>
-
+        <DialogTitle id="scroll-dialog--title">Transcription</DialogTitle>
         <DialogContent dividers={true} >
           <DialogContentText
             id="scroll-dialog-description"
             ref={descriptionElementRef}
             tabIndex={-1}
             textAlign="left"
-          >
-            {captions.map((caption, index) => 
-              <Typography key={`caption-${index}`} variant="body1" gutterBottom textAlign="left" mb={2}>
-              [{caption.timestamp}] {caption.speaker}: {caption.text}
-              </Typography>
-            )}
-          </DialogContentText>
+          ></DialogContentText>
+          {captions.map((caption, index) => 
+            <Typography key={`caption-${index}`} variant="body1" gutterBottom textAlign="left" >
+            [{caption.timestamp}] {caption.speaker}: {caption.text}
+            </Typography> 
+          )}
         </DialogContent>
-
         <DialogActions>
           <Button onClick={handleClose}>Close</Button>
         </DialogActions>

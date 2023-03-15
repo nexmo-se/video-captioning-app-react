@@ -10,3 +10,4 @@
 follow steps in `./front/README.md` and `./server/README.md` 
 
 
+![sample app with Vonage Live Captions](./video-captioning-api-demo.png?raw=true "sample app with Vonage Live Captions")
