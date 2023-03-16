@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { MicButton } from "../MicButton";
 import { VideoButton } from "../VideoButton";
-import { ScreenShare } from "../ScreenShare";
 import { SettingsButton } from "../SettingsButton";
 import { CaptionButton } from "../CaptionButton";
 
@@ -15,9 +14,7 @@ export const ControlToolBar = ({
   hasVideo,
   handleMicButtonClick,
   handleVideoButtonClick,
-  currentSession,
   currentPublisher,
-  videoContainer,
   isCaptioning,
   handleCaptionMicClick,
 }) => {
@@ -65,10 +62,6 @@ export const ControlToolBar = ({
           hasVideo={hasVideo}
           onClick={handleVideoButtonClick}
         ></VideoButton>
-        <ScreenShare
-          currentSession={currentSession}
-          videoContainer={videoContainer}
-        ></ScreenShare>
         <SettingsButton currentPublisher={currentPublisher} />
         <CaptionButton isCaptioning={isCaptioning} handleClick={handleCaptionMicClick} />
       </div>

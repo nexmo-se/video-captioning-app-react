@@ -1,6 +1,6 @@
 # video-captioning-app-react
 
-check `./src/hooks/useSubscriber.js` for sample code for Live Captions — OpenTok.js
+check `front/src/context/CaptionsContext.js` for sample code for Live Captions — OpenTok.js
 
 
 ## Install

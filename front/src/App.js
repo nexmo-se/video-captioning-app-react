@@ -6,11 +6,12 @@ import {
   Navigate,
   Routes,
 } from "react-router-dom";
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 
 import { WaitingRoom } from "./components/WaitingRoom";
 import { VideoRoom } from "./components/VideoRoom";
 import { UserContext } from "./context/UserContext";
+import { CaptionsProvider } from "./context/CaptionsContext";
 
 function App() {
   const [user, setUser] = useState({
@@ -27,11 +28,12 @@ function App() {
     <Router>
       <UserContext.Provider value={value}>
         <Routes>
-          <Route path="/video-room" exact element={ <VideoRoom /> } />
+          <Route path="/video-room" exact element={ <CaptionsProvider><VideoRoom /></CaptionsProvider>  } />
           <Route path="/waiting-room" exact element={ <WaitingRoom /> } />
           <Route path="/" element={<Navigate replace to="/waiting-room" />} />
         </Routes>
       </UserContext.Provider>
+      
     </Router>
   );
 }

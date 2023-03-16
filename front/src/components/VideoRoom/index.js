@@ -12,7 +12,10 @@ import {
 import useStyles from './styles';
 import { getCredentials } from '../../api/credentials';
 import { startCaptions, stopCaptions } from '../../api/captions';
+
 import { UserContext } from '../../context/UserContext';
+import { CaptionsContext } from '../../context/CaptionsContext';
+
 import { usePublisher } from '../../hooks/usePublisher';
 import { useSession } from '../../hooks/useSession';
 import { useSubscriber } from '../../hooks/useSubscriber';
@@ -24,20 +27,27 @@ import { CaptionBox } from '../CaptionBox';
 
 export function VideoRoom() {
   const classes = useStyles();
-  const { user } = useContext(UserContext);
 
-  const [publisherOptions, setPublisherOptions] = useState(null);
+  const { user } = useContext(UserContext);
+  const { captions, toggleSubscribeToCaptions, onCaptionReceived } = useContext(CaptionsContext);
+
   const [credentials, setCredentials] = useState(null);
+
   const [hasAudio, setHasAudio] = useState(user.defaultSettings.publishAudio);
   const [hasVideo, setHasVideo] = useState(user.defaultSettings.publishVideo);
+
   const [isCaptioning, setIsCaptioning] = useState(true);
+  const [subToCaptions, setSubToCaptions] = useState(true);
 
   const videoContainerRef = useRef();
 
   const { 
     publisher, 
     publish, 
-    pubInitialised 
+    pubInitialised,
+    stream,
+    subscriber,
+    subscribeSelf,
   } = usePublisher({
     container: videoContainerRef
   });
@@ -46,13 +56,12 @@ export function VideoRoom() {
     session,
     createSession, 
     connected,
-    streams
+    streams,
    } = useSession();
 
   const {
+    subscribers,
     subscribe,
-    captions,
-    toggleSubscribeToCaptions,
   } = useSubscriber({
     container: videoContainerRef,
     session
@@ -67,10 +76,9 @@ export function VideoRoom() {
   const toggleIsCaptioning = useCallback(() => {
     setIsCaptioning((prev) => !prev);
   }, []);
-
-  useEffect(() => {
-    setPublisherOptions({ ...user.defaultSettings, name: user.username });
-  }, [user]);
+  const toggleSubToCaptions = useCallback(() => {
+    setSubToCaptions((prev) => !prev);
+  }, []);
 
   useEffect(() => {
     getCredentials().then(({ apikey, sessionId, token }) => {
@@ -80,18 +88,36 @@ export function VideoRoom() {
   
   useEffect(() => {
     if (credentials) {
+      let { sessionId } = credentials;
+      if (isCaptioning && sessionId) {
+        startCaptions(sessionId).then((data) => {
+          console.log('startCaptions', data);
+          let captionsId = data.captionsId || null;
+          if (!captionsId) setIsCaptioning(false);
+        }).catch(console.log);
+      }
+    }
+  }, [isCaptioning, credentials]);
+
+  useEffect(() => {
+    if (credentials) {
       createSession(credentials);
     }
   }, [createSession, credentials]);
 
   useEffect(() => {
     if (session && connected && !pubInitialised) {
+      const publisherOptions = {
+        publishAudio: hasAudio,
+        publishVideo: hasVideo,
+        name: user.username, 
+      };
       publish({
         session: session,
         publisherOptions
       });
     }
-  }, [publish, session, connected, pubInitialised, publisherOptions]);
+  }, [publish, session, connected, pubInitialised]);
 
   useEffect(() => {
     if (publisher) {
@@ -106,28 +132,47 @@ export function VideoRoom() {
   }, [hasVideo, publisher]);
 
   useEffect(() => {
+    if (session && connected && pubInitialised && stream && !subscriber) {
+      subscribeSelf({
+        session,
+        stream,
+      });
+    }
+  }, [subscribeSelf, session, connected, pubInitialised, stream, subscriber]);
+
+  useEffect(() => {
     if (session && streams) {
-      subscribe({
+      const res = subscribe({
         session,
         streams,
       });
+      res.then(() => {
+      }).catch(console.log);
     }
   }, [subscribe, session, streams]);
 
   useEffect(() => {
-    if (session) {
-      if (isCaptioning === true) {
-        startCaptions(session.id).then((data) => {
-          console.log('startCaptions', data);
-        }).catch(console.log);
-      } else {
-        stopCaptions(session.id).then((data) => {
-          console.log('stopCaptions', data);
-        }).catch(console.log);
+    if (subscriber) {
+      publisher.publishAudio(hasAudio);
+      subscriber.off('captionReceived');
+      if (isCaptioning && subToCaptions) {
+        subscriber.on('captionReceived', (event) => onCaptionReceived(event, subscriber));
       }
-      toggleSubscribeToCaptions(isCaptioning);
+      toggleSubscribeToCaptions((isCaptioning && subToCaptions), subscriber);
     }
-  }, [session, isCaptioning, toggleSubscribeToCaptions, startCaptions, stopCaptions]);
+  }, [subscriber, isCaptioning, subToCaptions, onCaptionReceived, toggleSubscribeToCaptions]);
+
+  useEffect(() => {
+    if (subscribers) {
+      for (const subscriber of subscribers) {
+        subscriber.off('captionReceived');
+        if ((isCaptioning && subToCaptions)) {
+          subscriber.on('captionReceived', (event) => onCaptionReceived(event, subscriber));
+        }
+        toggleSubscribeToCaptions((isCaptioning && subToCaptions), subscriber);
+      }
+    }
+  }, [subscribers, isCaptioning, subToCaptions, onCaptionReceived, toggleSubscribeToCaptions]);
 
   return (
   <Stack
@@ -152,11 +197,9 @@ export function VideoRoom() {
       hasVideo={hasVideo}
       handleMicButtonClick={toggleAudio}
       handleVideoButtonClick={toggleVideo}
-      currentSession={session}
       currentPublisher={publisher}
-      videoContainer={videoContainerRef}
-      isCaptioning={isCaptioning}
-      handleCaptionMicClick={toggleIsCaptioning}
+      isCaptioning={isCaptioning && subToCaptions}
+      handleCaptionMicClick={toggleSubToCaptions}
     />
   </Stack>);
 }

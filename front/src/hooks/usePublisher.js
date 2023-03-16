@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState, 
-  // useEffect 
+  //useEffect, useContext
 } from 'react';
 import useDevices from '../hooks/useDevices';
 import OT from '@opentok/client';
@@ -8,8 +8,6 @@ const defaultPublisherOptions = {
   insertMode: 'append',
   width: '100%',
   height: '100%',
-  publishVideo: true,
-  publishAudio: true,
   publishCaptions: true,
   style: {
     buttonDisplayMode: 'on',
@@ -20,36 +18,38 @@ const defaultPublisherOptions = {
 };
 
 export function usePublisher({ container }) {
-  const [isPublishing, setIsPublishing] = useState(false);
   const [pubInitialised, setPubInitialised] = useState(false);
+
+  const [stream, setStream] = useState(null);
+  const [subscriber, setSubscriber] = useState(null);
+  const [videoElement, setVideoElement] = useState(null);
 
   const publisherRef = useRef();
 
   const { deviceInfo, getDevices } = useDevices();
 
   const streamCreatedListener = useCallback(({ stream }) => {
-    setPubInitialised(true);
+    setStream(stream);
   }, []);
 
-  const streamDestroyedListener = useCallback(({ stream }) => {
-    publisherRef.current = null;
-    setPubInitialised(false);
-    setIsPublishing(false);
+  const streamDestroyedListener = useCallback(() => {
+    setStream(null);
   }, []);
 
-  // const videoElementCreatedListener = useCallback(() => {
-  //   setPubInitialised(true);
-  // }, []);
+  const videoElementCreatedListener = useCallback(({ element }) => {
+    setVideoElement(element);
+  }, []);
 
   const destroyedListener = useCallback(() => {
     publisherRef.current = null;
     setPubInitialised(false);
-    setIsPublishing(false);
+    setStream(null);
+    setSubscriber(null);
   }, []);
 
   const accessAllowedListener = useCallback(async () => {
     await getDevices().catch(console.log);
-    //setPubInitialised(true);
+    setPubInitialised(true);
   }, [getDevices]);
 
   const accessDeniedListener = useCallback(() => {
@@ -57,47 +57,49 @@ export function usePublisher({ container }) {
     setPubInitialised(false);
   }, []);
 
-  const initPublisher = useCallback(({container, publisherOptions}) => {
-    console.log('[UsePublisher] - initPublisher called');
+  const initPublisher = useCallback(
+    ({container, publisherOptions}) => {
+      console.log('[UsePublisher] - initPublisher called');
 
-    if (publisherRef.current) {
-      console.log('[UsePublisher] - initPublisher - already initiated', pubInitialised);
-      return;
-    }
-
-    const finalPublisherOptions = Object.assign({}, defaultPublisherOptions, publisherOptions);
-    // console.log('[UsePublisher] - finalPublisherOptions', finalPublisherOptions);
-    
-    publisherRef.current = OT.initPublisher(
-      container.current.id,
-      finalPublisherOptions,
-      (err) => {
-        if (err) {
-          console.log('[UsePublisher] - initPublisher err', err);
-          publisherRef.current = null;
-        } else {
-          console.log('[UsePublisher] - initPublisher done');
-        }
+      if (publisherRef.current) {
+        console.log('[UsePublisher] - initPublisher - already initiated');
+        return;
       }
-    );
 
-    publisherRef.current.on('accessAllowed', accessAllowedListener);
-    publisherRef.current.on('accessDenied', accessDeniedListener);
-    publisherRef.current.on('streamCreated', streamCreatedListener);
-    publisherRef.current.on('streamDestroyed', streamDestroyedListener);
-    // publisherRef.current.on('videoElementCreated', videoElementCreatedListener);
-    publisherRef.current.on('destroyed', destroyedListener);
+      const finalPublisherOptions = Object.assign({}, defaultPublisherOptions, publisherOptions);
+      console.log('[UsePublisher] - finalPublisherOptions', finalPublisherOptions);
+      
+      publisherRef.current = OT.initPublisher(
+        container.current.id,
+        finalPublisherOptions,
+        (err) => {
+          if (err) {
+            console.log('[UsePublisher] - initPublisher err', err);
+            publisherRef.current = null;
+          } else {
+            console.log('[UsePublisher] - initPublisher done');
+          }
+        }
+      );
 
-    setPubInitialised(true);
+      publisherRef.current.on('accessAllowed', accessAllowedListener);
+      publisherRef.current.on('accessDenied', accessDeniedListener);
+      publisherRef.current.on('streamCreated', streamCreatedListener);
+      publisherRef.current.on('streamDestroyed', streamDestroyedListener);
+      publisherRef.current.on('videoElementCreated', videoElementCreatedListener);
+      publisherRef.current.on('destroyed', destroyedListener);
 
-  }, 
-  [
-    destroyedListener,
-    streamCreatedListener,
-    streamDestroyedListener,
-    accessAllowedListener,
-    accessDeniedListener,
-  ]);
+      setPubInitialised(true);
+    },
+    [
+      destroyedListener,
+      videoElementCreatedListener,
+      streamCreatedListener,
+      streamDestroyedListener,
+      accessAllowedListener,
+      accessDeniedListener,
+      setPubInitialised,
+    ]);
 
   const destroyPublisher = useCallback(() => {
     if (publisherRef.current) {
@@ -112,43 +114,79 @@ export function usePublisher({ container }) {
         initPublisher({container, publisherOptions});
       }
 
-      if (session && publisherRef.current && !isPublishing) {
+      if (session && publisherRef.current && !stream) {
         return new Promise((resolve, reject) => {
           session.publish(publisherRef.current, (err) => {
             if (err) {
               console.log('[UsePublisher] - session.publish err', err);
-              setIsPublishing(false);
               publisherRef.current = null;
-              reject(err);
+              return reject(err);
+            } else {
+              console.log('[UsePublisher] - session.publish done');
+              resolve(publisherRef.current);
             }
-            console.log('[UsePublisher] - session.publish done');
-            setIsPublishing(true);
-            resolve(publisherRef.current);
           });
         });
-
-        // isCurrent.current;
       }
-
     },
     [
       initPublisher, 
-      isPublishing,
+      stream,
       container,
     ]
   );
 
-  const unpublish = useCallback(({ session }) => {
-    if (publisherRef.current && isPublishing) {
-      session.unpublish(publisherRef.current);
-      setIsPublishing(false);
+  const unpublish = useCallback(
+    ({ session }) => {
+      if (publisherRef.current && subscriber) {
+        session.unsubscribe(subscriber);
+        setSubscriber(null);
+      }
+      if (publisherRef.current && stream) {
+        session.unpublish(publisherRef.current);
+        setStream(null);
+      }
       publisherRef.current = null;
-    }
-  }, [isPublishing]);
+    }, [stream, subscriber]);
 
-  // useEffect(() => {
-  //   console.log("[UsePublisher] - useEffect");
-  // }, []);
+  const subscribeSelf = 
+    ({ session, stream }) => {
+      if (!session || !container.current) {
+        return;
+      }
+      return new Promise((resolve, reject) => {
+        const subscriber = session.subscribe (
+          stream,
+          videoElement,
+          {
+            insertMode: 'replace',
+            width: '100%',
+            height: '100%',
+            style: {
+              buttonDisplayMode: 'on',
+              nameDisplayMode: 'on',
+            },
+            showControls: true,
+            fitMode: 'contain',
+            testNetwork: true,
+            subscribeToAudio: false,
+            subscribeToVideo: false,
+          }, 
+          (err) => {
+            if (err) {
+              console.log('[usePublisher] - session.subscribe err', err);
+              setSubscriber(null);
+              return reject(null);
+            } else {
+              console.log('[usePublisher] - session.subscribe done');
+              subscriber.streamName = `${subscriber.stream.name}`;
+              setSubscriber(subscriber);
+              resolve(subscriber);
+            }
+          }
+        );
+      });
+    };
 
   return {
     publisher: publisherRef.current,
@@ -157,6 +195,9 @@ export function usePublisher({ container }) {
     publish,
     pubInitialised,
     unpublish,
-    deviceInfo
+    deviceInfo,
+    stream,
+    subscriber,
+    subscribeSelf,
   };
 }
