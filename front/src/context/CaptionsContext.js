@@ -13,12 +13,12 @@ export function CaptionsProvider({ children }) {
     , [setCaptions]);
 
   const toggleSubscribeToCaptions = useCallback(
-    async (isCaptioning, subscriber) => {
-      console.log(`[CaptionsProvider] - toggleSubscribeToCaptions isCaptioning ${isCaptioning}`);
+    async (subToCaptions, subscriber) => {
+      console.log(`[CaptionsProvider] - toggleSubscribeToCaptions ${subToCaptions}`);
       if (subscriber) {
         try {
-          await subscriber.subscribeToCaptions(isCaptioning);
-          console.log(`[CaptionsProvider] - subscriber.subscribeToCaptions done ${subscriber.id}`)
+          await subscriber.subscribeToCaptions(subToCaptions);
+          console.log(`[CaptionsProvider] - subscriber.subscribeToCaptions done ${subToCaptions} ${subscriber.id}`)
         } catch (err) {
           console.log(`[CaptionsProvider] - subscriber.subscribeToCaptions err`, err);
         }

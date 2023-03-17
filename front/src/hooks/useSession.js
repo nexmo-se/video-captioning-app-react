@@ -1,11 +1,21 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import OT from "@opentok/client";
+import { useState, useRef, useCallback, useEffect } from 'react';
+import OT from '@opentok/client';
 
 export function useSession() {
   const [connected, setConnected] = useState(false);
   const [streams, setStreams] = useState([]);
 
+  const [isCaptioning, setIsCaptioning] = useState(false);
+
   const sessionRef = useRef(null);
+
+  const onSignalCaptionsStarted = useCallback((event) => {
+    setIsCaptioning(true);
+  }, []);
+
+  const onSignalCaptionsStopped = useCallback((event) => {
+    setIsCaptioning(false);
+  }, []);
 
   const onStreamCreated = useCallback(({ stream }) => {
     if (!streams.find(el => el.id === stream.id)) {
@@ -26,22 +36,24 @@ export function useSession() {
   const eventHandlers = {
     streamCreated: onStreamCreated,
     streamDestroyed: onStreamDestroyed,
-    sessionDisconnected: onSessionDisconnected
+    sessionDisconnected: onSessionDisconnected,
+    'signal:captions:started': onSignalCaptionsStarted,
+    'signal:captions:stopped': onSignalCaptionsStopped,
   };
   
   const createSession = useCallback(({ apikey, sessionId, token }) => {
     if (connected) {
-      console.log("[UseSession] - createSession already connected");
+      console.log('[UseSession] - createSession already connected');
       return;
     }
     if (!apikey) {
-      throw new Error("[UseSession] - createSession Missing apikey");
+      throw new Error('[UseSession] - createSession Missing apikey');
     }
     if (!sessionId) {
-      throw new Error("[UseSession] - createSession Missing sessionId");
+      throw new Error('[UseSession] - createSession Missing sessionId');
     }
     if (!token) {
-      throw new Error("[UseSession] - createSession Missing token");
+      throw new Error('[UseSession] - createSession Missing token');
     }
 
     sessionRef.current = OT.initSession(apikey, sessionId);
@@ -52,14 +64,14 @@ export function useSession() {
     return new Promise((resolve, reject) => {
       sessionRef.current.connect(token, (err) => {
         if (!sessionRef.current) {
-          console.log("[UseSession] - createSession already exists");
+          console.log('[UseSession] - createSession already exists');
           return;
         }
         if (err) {
-          console.log("[UseSession] - createSession err", err);
+          console.log('[UseSession] - createSession err', err);
           reject(err);
         } else if (!err) {
-          console.log("[UseSession] - createSession done");
+          console.log('[UseSession] - createSession done');
           setConnected(true);
           resolve(sessionRef.current);
         }
@@ -89,5 +101,7 @@ export function useSession() {
     createSession,
     destroySession,
     streams,
+    isCaptioning, 
+    setIsCaptioning,
   };
 }

@@ -91,6 +91,23 @@ const stopCaptions = async function(captionsId) {
   }
 }
 
+const sendSignal = async function (sessionId, type, data) {
+  return new Promise((resolve, reject) => {
+    const payload = { type, data };
+    payload.data = payload.data || '';
+    if (typeof payload.data === 'object') payload.data = JSON.stringify(payload.data);
+    opentok.signal(sessionId, null, payload, function (err) {
+      if (err) {
+        console.log(err.message);
+        // reject(err);
+        resolve(false);
+      } else {
+        resolve(true);
+      }
+    });
+  });
+}
+
 /** */
 const start = async (app) => {
   try {
@@ -114,5 +131,7 @@ module.exports = {
   startCaptions,
   stopCaptions,
   opentok,
-  start
+  start,
+  sendSignal,
+  generateJwt
 };

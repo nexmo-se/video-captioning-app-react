@@ -6,6 +6,7 @@ import React, {
   useCallback
 } from 'react';
 import {
+  Button,
   Stack,
 } from '@mui/material';
 
@@ -36,8 +37,7 @@ export function VideoRoom() {
   const [hasAudio, setHasAudio] = useState(user.defaultSettings.publishAudio);
   const [hasVideo, setHasVideo] = useState(user.defaultSettings.publishVideo);
 
-  const [isCaptioning, setIsCaptioning] = useState(true);
-  const [subToCaptions, setSubToCaptions] = useState(true);
+  const [subToCaptions, setSubToCaptions] = useState(false);
 
   const videoContainerRef = useRef();
 
@@ -57,6 +57,8 @@ export function VideoRoom() {
     createSession, 
     connected,
     streams,
+    isCaptioning, 
+    setIsCaptioning,
    } = useSession();
 
   const {
@@ -64,7 +66,6 @@ export function VideoRoom() {
     subscribe,
   } = useSubscriber({
     container: videoContainerRef,
-    session
   });
 
   const toggleAudio = useCallback(() => {
@@ -92,8 +93,11 @@ export function VideoRoom() {
       if (isCaptioning && sessionId) {
         startCaptions(sessionId).then((data) => {
           console.log('startCaptions', data);
-          let captionsId = data.captionsId || null;
-          if (!captionsId) setIsCaptioning(false);
+          if (!data.captionsId) setIsCaptioning(false);
+        }).catch(console.log);
+      } else if (!isCaptioning && sessionId) {
+        stopCaptions(sessionId).then((data) => {
+          console.log('stopCaptions', data);
         }).catch(console.log);
       }
     }
@@ -158,7 +162,7 @@ export function VideoRoom() {
       if (isCaptioning && subToCaptions) {
         subscriber.on('captionReceived', (event) => onCaptionReceived(event, subscriber));
       }
-      toggleSubscribeToCaptions((isCaptioning && subToCaptions), subscriber);
+      if (isCaptioning) toggleSubscribeToCaptions(subToCaptions, subscriber);
     }
   }, [subscriber, isCaptioning, subToCaptions, onCaptionReceived, toggleSubscribeToCaptions]);
 
@@ -169,7 +173,7 @@ export function VideoRoom() {
         if ((isCaptioning && subToCaptions)) {
           subscriber.on('captionReceived', (event) => onCaptionReceived(event, subscriber));
         }
-        toggleSubscribeToCaptions((isCaptioning && subToCaptions), subscriber);
+        if (isCaptioning) toggleSubscribeToCaptions(subToCaptions, subscriber);
       }
     }
   }, [subscribers, isCaptioning, subToCaptions, onCaptionReceived, toggleSubscribeToCaptions]);
@@ -190,6 +194,17 @@ export function VideoRoom() {
 
     <CaptionBar captions={captions} className={classes.captionsBar} />
     <CaptionBox captions={captions} />
+    <Button 
+        sx={{
+          border: '1px solid',
+          p: 1,
+          borderRadius: 2,
+          position: 'absolute',
+          bottom: 10,
+          right: 180,
+          zIndex: 'tooltip',
+        }}
+        onClick={toggleIsCaptioning} >{isCaptioning? 'Disable' : 'Enable'} Caption for Session</Button>
 
     <ControlToolBar
       className={classes.controlToolbar}

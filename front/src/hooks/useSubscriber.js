@@ -14,7 +14,7 @@ const defaultSubscriberOptions = {
   fitMode: 'contain'
 };
 
-export function useSubscriber({ container, session }) {
+export function useSubscriber({ container }) {
   const [subscribers, setSubscribers] = useState([]);
 
   const addSubscriber = useCallback(
