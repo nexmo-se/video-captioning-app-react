@@ -83,6 +83,8 @@ export function usePublisher({ container }) {
       publisherRef.current.on('streamDestroyed', streamDestroyedListener);
       publisherRef.current.on('videoElementCreated', videoElementCreatedListener);
       publisherRef.current.on('destroyed', destroyedListener);
+      
+      setPubInitialised(true);
     },
     [
       destroyedListener,
@@ -91,13 +93,14 @@ export function usePublisher({ container }) {
       streamDestroyedListener,
       accessAllowedListener,
       accessDeniedListener,
+      setPubInitialised,
     ]);
 
   const destroyPublisher = useCallback(() => {
     if (publisherRef.current && pubInitialised) {
       publisherRef.current.destroy();
     }
-  }, []);
+  }, [pubInitialised]);
 
   const publish = useCallback(
     ({ session, publisherOptions }) => {

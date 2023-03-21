@@ -33,7 +33,6 @@ function App() {
           <Route path="/" element={<Navigate replace to="/waiting-room" />} />
         </Routes>
       </UserContext.Provider>
-      
     </Router>
   );
 }

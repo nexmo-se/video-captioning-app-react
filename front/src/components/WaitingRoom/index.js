@@ -251,6 +251,7 @@ export function WaitingRoom() {
         <InputLabel id="audio-input">
           Select Audio Source
         </InputLabel>
+        {deviceInfo.audioInputDevices && (
         <Select
           labelId="audio-input"
           id="audio-intput-select"
@@ -266,6 +267,7 @@ export function WaitingRoom() {
             </MenuItem>
           ))}
         </Select>
+        )}
       </FormControl>
       </ListItem>
       
