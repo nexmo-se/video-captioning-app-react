@@ -9,17 +9,12 @@ const defaultPublisherOptions = {
   width: '100%',
   height: '100%',
   publishCaptions: true,
-  style: {
-    buttonDisplayMode: 'on',
-    nameDisplayMode: 'on',
-  },
   showControls: false,
   fitMode: 'contain',
 };
 
 export function usePublisher({ container }) {
   const [pubInitialised, setPubInitialised] = useState(false);
-
   const [stream, setStream] = useState(null);
   const [subscriber, setSubscriber] = useState(null);
   const [videoElement, setVideoElement] = useState(null);
@@ -88,8 +83,6 @@ export function usePublisher({ container }) {
       publisherRef.current.on('streamDestroyed', streamDestroyedListener);
       publisherRef.current.on('videoElementCreated', videoElementCreatedListener);
       publisherRef.current.on('destroyed', destroyedListener);
-
-      setPubInitialised(true);
     },
     [
       destroyedListener,
@@ -98,11 +91,10 @@ export function usePublisher({ container }) {
       streamDestroyedListener,
       accessAllowedListener,
       accessDeniedListener,
-      setPubInitialised,
     ]);
 
   const destroyPublisher = useCallback(() => {
-    if (publisherRef.current) {
+    if (publisherRef.current && pubInitialised) {
       publisherRef.current.destroy();
     }
   }, []);
