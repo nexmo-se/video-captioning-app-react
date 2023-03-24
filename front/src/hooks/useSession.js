@@ -57,6 +57,8 @@ export function useSession() {
     }
 
     sessionRef.current = OT.initSession(apikey, sessionId);
+
+    sessionRef.current.off(eventHandlers);
     sessionRef.current.on(eventHandlers);
 
     return new Promise((resolve, reject) => {
