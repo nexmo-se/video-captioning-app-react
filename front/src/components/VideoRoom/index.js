@@ -11,8 +11,10 @@ import {
 } from '@mui/material';
 
 import useStyles from './styles';
+import { useQuery } from './../../hooks/useQuery';
+
 import { getCredentials } from '../../api/credentials';
-import { startCaptions, stopCaptions } from '../../api/captions';
+import { updateCaptions } from '../../api/captions';
 
 import { UserContext } from '../../context/UserContext';
 import { CaptionsContext } from '../../context/CaptionsContext';
@@ -27,7 +29,12 @@ import { CaptionBar } from '../CaptionBar';
 import { CaptionBox } from '../CaptionBox';
 
 export function VideoRoom() {
+  const query = useQuery();
   const classes = useStyles();
+
+  const roomId = query.get('room')
+    ? query.get('room')
+    : 'room-0'
 
   const { user } = useContext(UserContext);
   const { captions, toggleSubscribeToCaptions, onCaptionReceived } = useContext(CaptionsContext);
@@ -37,7 +44,7 @@ export function VideoRoom() {
   const [hasAudio, setHasAudio] = useState(user.defaultSettings.publishAudio);
   const [hasVideo, setHasVideo] = useState(user.defaultSettings.publishVideo);
 
-  const [subToCaptions, setSubToCaptions] = useState(false);
+  const [subToCaptions, setSubToCaptions] = useState(true);
 
   const videoContainerRef = useRef();
 
@@ -75,33 +82,22 @@ export function VideoRoom() {
     setHasVideo((prevVideo) => !prevVideo);
   }, []);
   const toggleIsCaptioning = useCallback(() => {
+    const { sessionId } = credentials;
+    const action = isCaptioning === false? 'start' : 'stop';
+    // console.log(updateCaptions, action);
+    if (sessionId) updateCaptions(sessionId, action).then(data => console.log(data)).catch(console.log);
     setIsCaptioning((prev) => !prev);
-  }, []);
+  }, [credentials, isCaptioning]);
   const toggleSubToCaptions = useCallback(() => {
     setSubToCaptions((prev) => !prev);
   }, []);
 
   useEffect(() => {
-    getCredentials().then(({ apikey, sessionId, token }) => {
+    getCredentials(roomId).then(({ apikey, sessionId, token, captionsId }) => {
       setCredentials({ apikey, sessionId, token });
+      if (captionsId) setIsCaptioning(true);
     });
   }, []);
-  
-  useEffect(() => {
-    if (credentials) {
-      let { sessionId } = credentials;
-      if (isCaptioning && sessionId) {
-        startCaptions(sessionId).then((data) => {
-          console.log('startCaptions', data);
-          if (!data.captionsId) setIsCaptioning(false);
-        }).catch(console.log);
-      } else if (!isCaptioning && sessionId) {
-        stopCaptions(sessionId).then((data) => {
-          console.log('stopCaptions', data);
-        }).catch(console.log);
-      }
-    }
-  }, [isCaptioning, credentials]);
 
   useEffect(() => {
     if (credentials) {
@@ -162,7 +158,7 @@ export function VideoRoom() {
       if (isCaptioning && subToCaptions) {
         subscriber.on('captionReceived', (event) => onCaptionReceived(event, subscriber));
       }
-      if (isCaptioning) toggleSubscribeToCaptions(subToCaptions, subscriber);
+      if (isCaptioning) toggleSubscribeToCaptions((isCaptioning && subToCaptions), subscriber);
     }
   }, [subscriber, isCaptioning, subToCaptions, onCaptionReceived, toggleSubscribeToCaptions]);
 
@@ -170,10 +166,10 @@ export function VideoRoom() {
     if (subscribers) {
       for (const subscriber of subscribers) {
         subscriber.off('captionReceived');
-        if ((isCaptioning && subToCaptions)) {
+        if (isCaptioning && subToCaptions) {
           subscriber.on('captionReceived', (event) => onCaptionReceived(event, subscriber));
         }
-        if (isCaptioning) toggleSubscribeToCaptions(subToCaptions, subscriber);
+        if (isCaptioning) toggleSubscribeToCaptions((isCaptioning && subToCaptions), subscriber);
       }
     }
   }, [subscribers, isCaptioning, subToCaptions, onCaptionReceived, toggleSubscribeToCaptions]);
@@ -200,8 +196,10 @@ export function VideoRoom() {
           p: 1,
           borderRadius: 2,
           position: 'absolute',
-          bottom: 10,
-          right: 180,
+          top: 40,
+          right: 10,
+          pt: 0,
+          pb: 0,
           zIndex: 'tooltip',
         }}
         onClick={toggleIsCaptioning} >{isCaptioning? 'Disable' : 'Enable'} Caption for Session</Button>

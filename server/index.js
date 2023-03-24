@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const logger = require('morgan');
-const cors = require('cors');
 
 const services = require('./services');
 const indexRouter = require('./routes');
@@ -12,13 +11,16 @@ app.use(logger('dev', { skip: (req) => {
   const regex = /^(\/.*\/)/;
   const found = req.path.match(regex);
   return found
-    ? ['/js/', '/_/'].includes(found[0]) 
+    ? ['/js/', '/_/', '/api/room/'].includes(found[0]) 
     : ['/favicon.ico', '/', '/api/room/room-1/token'].includes(req.path);
 }}));
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(__dirname + '/public'));
+
+app.get("/_/health", async (req, res) => {
+  res.sendStatus(200);
+});
 
 app.use('/', indexRouter(services));
 

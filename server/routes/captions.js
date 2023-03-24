@@ -3,25 +3,28 @@ const router = express.Router();
 
 /** */
 function Router(services) {
-  const { opentok, startCaptions, stopCaptions, sendSignal } = services;
+  const { opentok, state } = services;
 
   router.all('/start/:sessionId', async function (req, res, next) {
     try {
-      let sessionId = req.params.sessionId || null;
+      let { sessionId } = req.params;
       if (!sessionId) throw "empty params sessionId";
+      let room = await state.getRoomBySessionId(sessionId);
+      if (!room) throw 'Not found room';
 
-      let captionsId = req.app.get(`captionsId-${sessionId}`);
-      if (captionsId && captionsId !== null) return res.json({ captionsId });
+      if (room.captionsId) return res.json(room);
 
-      let data = await startCaptions(sessionId);
-      console.log(`[router] ${req.path} startCaptions`, data);
+      let data = await opentok.startCaptions(sessionId, 
+        {
+          appUrl: req.app.get('appUrl')
+        }
+      );
+      console.log(`[router] - ${req.path} opentok.startCaptions`, data);
+      if (data.captionsId) room = await state.setCaptionsId(room.id, data.captionsId);
 
-      let cId = data.captionsId || null;
-      req.app.set(`captionsId-${sessionId}`, cId);
+      await opentok.sendSignal(sessionId, 'captions:started');
 
-      await sendSignal(sessionId, 'captions:started');
-
-      res.json(data);
+      res.json(room);
     } catch (e) {
       next(e)
     }
@@ -29,31 +32,18 @@ function Router(services) {
 
   router.all('/stop/:sessionId', async function (req, res, next) {
     try {
-      let sessionId = req.params.sessionId || null;
+      let { sessionId } = req.params;
       if (!sessionId) throw "empty params sessionId";
-      
-      let captionsId = req.app.get(`captionsId-${sessionId}`);
-      if (captionsId && captionsId !== null) await stopCaptions(captionsId);
+      let room = await state.getRoomBySessionId(sessionId);
+      if (!room) throw 'Not found room';
 
-      req.app.set(`captionsId-${sessionId}`, null);
-      
-      await sendSignal(sessionId, 'captions:stopped');
+      if (room.captionsId) await opentok.stopCaptions(room.captionsId);
 
-      return res.json({ captionsId: null });
-    } catch (e) {
-      next(e)
-    }
-  });
+      room = await state.setCaptionsId(room.id, null);
 
-  router.all('/status/:sessionId', async function (req, res, next) {
-    try {
-      let sessionId = req.params.sessionId || null;
-      if (!sessionId) throw "empty params sessionId";
+      await opentok.sendSignal(sessionId, 'captions:stopped');
 
-      let captionsId = req.app.get(`captionsId-${sessionId}`);
-      if (captionsId && captionsId !== null) return res.json({ captionsId });
-
-      return res.json({ captionsId: null });
+      res.json(room);
     } catch (e) {
       next(e)
     }

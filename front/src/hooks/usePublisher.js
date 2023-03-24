@@ -43,7 +43,7 @@ export function usePublisher({ container }) {
   }, []);
 
   const accessAllowedListener = useCallback(async () => {
-    await getDevices().catch(console.log);
+    await getDevices();
     setPubInitialised(true);
   }, [getDevices]);
 
@@ -83,7 +83,7 @@ export function usePublisher({ container }) {
       publisherRef.current.on('streamDestroyed', streamDestroyedListener);
       publisherRef.current.on('videoElementCreated', videoElementCreatedListener);
       publisherRef.current.on('destroyed', destroyedListener);
-      
+
       setPubInitialised(true);
     },
     [

@@ -8,6 +8,10 @@ check `./services/index.js` for sample code for for Live Captions — REST API: 
 
 npm install 
 
+```sh
+neru init
+```
+
 ## Available Scripts
 
 In the project directory, you can run:

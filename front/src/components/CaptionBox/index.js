@@ -42,12 +42,14 @@ export const CaptionBox = React.memo(
           position: 'absolute',
           bottom: 10,
           right: 10,
+          pt: 0,
+          pb: 0,
           zIndex: 'tooltip',
         }}
         onClick={handleClickOpen()}>Transcription</Button>
 
       <Dialog
-        PaperProps={{ sx: { position: "fixed", top:'5%', right: 10, m: 0, bottom:'10%'} }}
+        PaperProps={{ sx: { position: "fixed", top: 100, right: 10, m: 0, bottom: 60} }}
         fullWidth={true}
         maxWidth="sm"
         open={open}

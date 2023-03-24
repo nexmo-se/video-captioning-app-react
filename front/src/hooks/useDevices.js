@@ -46,7 +46,7 @@ export default function useDevices() {
   useEffect(() => {
     navigator.mediaDevices.addEventListener('devicechange', getDevices);
 
-    getDevices().catch(console.error);
+    getDevices().then().catch(console.error);
 
     return () => {
       navigator.mediaDevices.removeEventListener('devicechange', getDevices);

@@ -29,15 +29,16 @@ const publisherOptions = {
   publishVideo: defaultLocalVideo,
 };
 
+const rooms = ['Room A', 'Room B', 'Room C'];
 export function WaitingRoom() {
   let query = useQuery();
   const classes = useStyles();
   
   const { user, setUser } = useContext(UserContext);
 
-  const username = query.get('username')
-    ? query.get('username')
-    : user.username;
+  // const username = query.get('username')
+  //   ? query.get('username')
+  //   : user.username;
 
   const navigate = useNavigate();
 
@@ -51,6 +52,8 @@ export function WaitingRoom() {
   const [audioDevice, setAudioDevice] = useState('');
   const [videoDevice, setVideoDevice] = useState('');
   const [audioOutputDevice, setAudioOutputDevice] = useState('');
+
+  const [roomId, setRoomId] = useState('room-0');
 
   const waitingRoomVideoContainerRef = useRef();
 
@@ -106,11 +109,11 @@ export function WaitingRoom() {
     if (!user.username) {
       setUser({...user, username: `U${ Date.now() }`});
     }
-    navigate('/video-room');
-    // navigate({
-    //   pathname: '/video-room',
-    //   search: '?sort=date&order=newest',
-    // });
+    //navigate('/video-room');
+    navigate({
+      pathname: '/video-room',
+      search: `?room=${roomId}`,
+    });
   };
 
   useEffect(() => {
@@ -145,7 +148,6 @@ export function WaitingRoom() {
       );
 
       const currentVideoDevice = publisher.getVideoSource();
-      // setVideoDevice(currentVideoDevice.deviceId);
       setVideoDevice(
         getSourceDeviceId(
           deviceInfo.videoInputDevices,
@@ -289,6 +291,28 @@ export function WaitingRoom() {
               {device.label}
             </MenuItem>
           ))}
+          </Select>
+        )}
+      </FormControl>
+      </ListItem>
+      <ListItem disablePadding>
+      <FormControl margin="dense">
+        <InputLabel id="room-list">Select Room</InputLabel>
+        {rooms && (
+          <Select
+            labelId="room-list"
+            id="room-list-select"
+            value={roomId}
+            onChange={(event) => {
+              setRoomId(event.target.value);
+            }}
+            sx={{ width: 360 }}
+          >
+            {rooms.map((room, index) => (
+              <MenuItem key={index} value={`room-${index}`}>
+                {room}
+              </MenuItem>
+            ))}
           </Select>
         )}
       </FormControl>
