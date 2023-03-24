@@ -1,0 +1,15 @@
+project:
+    name: neru
+instance:
+    name: dev
+    runtime: nodejs16
+    region: aws.euw1
+    application-id: 
+    entrypoint:
+        - node
+        - index.js
+debug:
+    name: training
+    entrypoint:
+        - nodemon
+        - index.js

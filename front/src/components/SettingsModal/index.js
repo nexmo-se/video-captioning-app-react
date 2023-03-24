@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 
-import OT
-// , { getDevices } 
-from '@opentok/client';
+import OT from '@opentok/client';
 import useStyles from './styles';
 import useDevices from '../../hooks/useDevices';
 
@@ -27,54 +25,43 @@ export function SettingsModal({ open, onCloseClick, currentPublisher }) {
   const [videoDevice, setVideoDevice] = useState('');
   const [audioOutputDevice, setAudioOutputDevice] = useState('');
 
-  const [localVideoSource, setLocalVideoSource] = useState(undefined);
-  const [localAudioSource, setLocalAudioSource] = useState(undefined);
-  const [localAudioOutput, setLocalAudioOutput] = useState(undefined);
-
-  const { deviceInfo } = useDevices();
+  const { deviceInfo, getDevices } = useDevices();
 
   const classes = useStyles();
 
-  /* async function handleAudioInputChange(e) {
-    const audioInputs = await fetchAudioInput();
-    const [selectedAudioInput] = audioInputs.filter(
-      (audioInput) => audioInput.label === e.target.value
-    );
-
-    if (selectedAudioInput && currentPublisher) {
-      currentPublisher.setAudioSource(selectedAudioInput.deviceId);
-      setSelectedAudioInput(selectedAudioInput);
-    }
-  } */
-
   const handleVideoSource = React.useCallback(
-    (e) => {
+    async (e) => {
       const videoDeviceId = e.target.value;
-      setVideoDevice(e.target.value);
-      currentPublisher.setVideoSource(videoDeviceId);
-      setLocalVideoSource(videoDeviceId);
+      await currentPublisher.setVideoSource(videoDeviceId);
+      setVideoDevice(videoDeviceId);
     },
-    [currentPublisher, setVideoDevice, setLocalVideoSource]
+    [
+      currentPublisher, 
+      setVideoDevice, 
+    ]
   );
 
   const handleAudioSource = React.useCallback(
-    (e) => {
+    async (e) => {
       const audioDeviceId = e.target.value;
+      await currentPublisher.setAudioSource(audioDeviceId);
       setAudioDevice(audioDeviceId);
-      currentPublisher.setAudioSource(audioDeviceId);
-      setLocalAudioSource(audioDeviceId);
     },
-    [currentPublisher, setAudioDevice, setLocalAudioSource]
+    [
+      currentPublisher, 
+      setAudioDevice, 
+    ]
   );
 
   const handleAudioOutput = React.useCallback(
-    (e) => {
+    async (e) => {
       const audioOutputId = e.target.value;
+      await OT.setAudioOutputDevice(audioOutputId);
       setAudioOutputDevice(audioOutputId);
-      OT.setAudioOutputDevice(audioOutputId);
-      setLocalAudioOutput(audioOutputId);
     },
-    [setLocalAudioOutput, setAudioOutputDevice]
+    [ 
+      setAudioOutputDevice,
+    ]
   );
 
   React.useEffect(() => {
@@ -83,8 +70,11 @@ export function SettingsModal({ open, onCloseClick, currentPublisher }) {
       setAudioDevice(
         getSourceDeviceId(deviceInfo.audioInputDevices, currentAudioDevice)
       );
+
       const currentVideoDevice = currentPublisher.getVideoSource();
-      setVideoDevice(currentVideoDevice.deviceId);
+      setVideoDevice(
+        getSourceDeviceId(deviceInfo.videoInputDevices, currentVideoDevice?.track)
+      );
 
       OT.getActiveAudioOutputDevice().then((currentAudioOutputDevice) => {
         setAudioOutputDevice(currentAudioOutputDevice.deviceId);
@@ -99,9 +89,9 @@ export function SettingsModal({ open, onCloseClick, currentPublisher }) {
   ]);
 
   React.useEffect(() => {
-    // getDevices(() => {
-    //   console.log('[SettingsModal] - useEffect - getDevices');
-    // });
+    getDevices().then(() => {
+      console.log('[SettingsModal] - useEffect - getDevices');
+    }).catch(console.log);
   }, []);
 
   return (
@@ -111,11 +101,11 @@ export function SettingsModal({ open, onCloseClick, currentPublisher }) {
         <DialogContentText>
           You can change your microphone and camera input here.
         </DialogContentText>
-        <Typography color="primary">Microphone</Typography>
-        <FormControl>
+        <FormControl sx={{mt:2}}>
           <InputLabel id="demo-simple-select-label">
             Select Audio Source
           </InputLabel>
+          {deviceInfo.audioInputDevices && (
           <Select
             labelId="demo-simple-select-label"
             id="demo-simple-select"
@@ -124,13 +114,14 @@ export function SettingsModal({ open, onCloseClick, currentPublisher }) {
             className={classes.selectWidth}
           >
             {deviceInfo.audioInputDevices.map((device) => (
-              <MenuItem key={device.deviceId} value={device.deviceId}>
+              <MenuItem key={`audioInputDevices-${device.deviceId}`} value={device.deviceId}>
                 {device.label}
               </MenuItem>
             ))}
           </Select>
+          )}
         </FormControl>
-        <FormControl>
+        <FormControl sx={{mt:2}}>
           <InputLabel id="video">Select Audio Output</InputLabel>
           {deviceInfo.audioOutputDevices && (
             <Select
@@ -141,14 +132,14 @@ export function SettingsModal({ open, onCloseClick, currentPublisher }) {
               autoWidth={true}
             >
               {deviceInfo.audioOutputDevices.map((device) => (
-                <MenuItem key={device.deviceId} value={device.deviceId}>
+                <MenuItem key={`audioOutputDevices-${device.deviceId}`} value={device.deviceId}>
                   {device.label}
                 </MenuItem>
               ))}
             </Select>
           )}
         </FormControl>
-        <FormControl>
+        <FormControl sx={{mt:2}}>
           <InputLabel id="video">Select Video Source</InputLabel>
           {deviceInfo.videoInputDevices && (
             <Select
@@ -158,7 +149,7 @@ export function SettingsModal({ open, onCloseClick, currentPublisher }) {
               onChange={handleVideoSource}
             >
               {deviceInfo.videoInputDevices.map((device) => (
-                <MenuItem key={device.deviceId} value={device.deviceId}>
+                <MenuItem  key={`videoInputDevices-${device.deviceId}`} value={device.deviceId}>
                   {device.label}
                 </MenuItem>
               ))}

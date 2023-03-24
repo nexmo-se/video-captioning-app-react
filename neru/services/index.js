@@ -8,16 +8,17 @@ if (!OT_API_KEY || !OT_API_SECRET) {
 const PORT = process.env.PORT || 3002;
 
 /** */
+const { neru } = require("neru-alpha");
 const opentok = require("./opentok")();
-const state = require("./state")();
+const state = require("./state")(neru);
 
 /** */
 const start = async (app) => {
   try {
     console.log('[start] -');
 
-    //app.set('appUrl', neru.getAppUrl());
-    app.set('appUrl', process.env.APP_URL);
+    app.set('appUrl', neru.getAppUrl());
+    // app.set('appUrl', process.env.APP_URL);
 
     const session = process.env.SESSION_ID
       ? { sessionId: process.env.SESSION_ID }
