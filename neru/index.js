@@ -24,6 +24,10 @@ app.get("/_/health", async (req, res) => {
 
 app.use('/', indexRouter(services));
 
+app.all('*', async function (req, res, next) {
+  res.sendFile((__dirname + '/public/index.html'));
+});
+
 app.use(function (req, res, next) {
   const err = new Error('Not Found');
   err.status = 404;
