@@ -6,8 +6,14 @@
 - The participants can scroll up and down on this transcription hisotry
 - Publisher self subscription
 
-## install and run the app
-follow steps in `./front/README.md` and `./server/README.md` 
+## Prerequisites
+- Vonage Video account and project
+- Early Access for the Live Captions API
+
+## Install and Run
+- run it in local, follow steps in `./front/README.md` and `./server/README.md` 
+- debug and deploy in Vonage Cloud Platform/NeRu follow steps in `./front/README.md` and `./neru/README.md` 
+
 
 
 ![sample app with Vonage Live Captions](./video-captioning-api-demo.png?raw=true "sample app with Vonage Live Captions")

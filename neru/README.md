@@ -1,27 +1,28 @@
 # video-captioning-app-server-express
 
-
 check `./services/index.js` for sample code for for Live Captions — REST API: `startCaptions` and `stopCaptions`
 
+## Prerequisites
+- Vonage API account 
+- Early Access for VCP/NeRu
 
 ## Install
 
-npm install 
+- `npm install`
+- `neru init`
 
-```sh
-neru init
-```
+## Environment variables
+- `OT_API_KEY`, `OT_API_SECRET`:
+    Vonage Video Project API KEY and API SECRET.
+
 
 ## Available Scripts
 
 In the project directory, you can run:
 
-### `npm start`
+### `npm start` / `neru debug` to start a Debugger
+- Run `npm start` in the `../frontend` to start frontend app
 
-Open [http://localhost:3002](http://localhost:3002) to view it in your browser.
-
-### `npm run build`
-
-
-### Deployment
+### `neru deploy` to deploy it to your neru account
+- Before runing `neru deploy`, copy the frontent build directory to `neru/public`: `cd ../front && run npm build && cp ./build ../neru/public`
 
