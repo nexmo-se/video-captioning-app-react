@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { MicButton } from "../MicButton";
 import { VideoButton } from "../VideoButton";
-import { SettingsButton } from "../SettingsButton";
 import { CaptionButton } from "../CaptionButton";
 
 import useStyles from "./styles";
@@ -62,7 +61,6 @@ export const ControlToolBar = ({
           hasVideo={hasVideo}
           onClick={handleVideoButtonClick}
         ></VideoButton>
-        <SettingsButton currentPublisher={currentPublisher} />
         <CaptionButton isCaptioning={isCaptioning} handleClick={handleCaptionMicClick} />
       </div>
     </div>

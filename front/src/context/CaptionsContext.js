@@ -7,8 +7,8 @@ export function CaptionsProvider({ children }) {
   const [captions, setCaptions] = useState([]);
 
   const addCaptions = useCallback(
-    ({ timestamp, speaker, text }) => {
-      setCaptions(prev => [...prev, { timestamp, speaker, text }]);
+    ({ timestamp, speaker, text, isFinal }) => {
+      setCaptions(prev => [...prev, { timestamp, speaker, text, isFinal }]);
     }
     , [setCaptions]);
 
@@ -28,15 +28,16 @@ export function CaptionsProvider({ children }) {
   
   const onCaptionReceived = useCallback(
     (event, subscriber) => {
-      if (event.isFinal) {
-        // console.log(`[CaptionsProvider] - onCaptionReceived`, event, subscriber.streamName || event.streamId, subscriber.streamId);
+      // console.log(`[CaptionsProvider] - onCaptionReceived`, event);
+      // if (event.isFinal) {
         const speaker = subscriber.streamName || event.streamId;
         setCaptions(prev => [...prev, {
-          timestamp: `${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getMinutes()}`,
+          timestamp: `${(new Date()).toTimeString().split(' ')[0]}`,
           speaker: speaker,
-          text: event.caption
+          text: event.caption,
+          isFinal: event.isFinal,
         }]);
-      }
+      // }
     }, [setCaptions]);
 
   return (
