@@ -1,7 +1,6 @@
 import { useCallback, useRef, useState, 
   //useEffect, useContext
 } from 'react';
-import useDevices from '../hooks/useDevices';
 import OT from '@opentok/client';
 
 const defaultPublisherOptions = {
@@ -20,8 +19,6 @@ export function usePublisher({ container }) {
   const [videoElement, setVideoElement] = useState(null);
 
   const publisherRef = useRef();
-
-  const { deviceInfo, getDevices } = useDevices();
 
   const streamCreatedListener = useCallback(({ stream }) => {
     setStream(stream);
@@ -43,9 +40,8 @@ export function usePublisher({ container }) {
   }, []);
 
   const accessAllowedListener = useCallback(async () => {
-    await getDevices();
     setPubInitialised(true);
-  }, [getDevices]);
+  }, []);
 
   const accessDeniedListener = useCallback(() => {
     publisherRef.current = null;
@@ -190,7 +186,6 @@ export function usePublisher({ container }) {
     publish,
     pubInitialised,
     unpublish,
-    deviceInfo,
     stream,
     subscriber,
     subscribeSelf,

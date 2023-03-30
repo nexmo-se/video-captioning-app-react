@@ -9,7 +9,6 @@ import {
   Button,
   Stack,
 } from '@mui/material';
-
 import useStyles from './styles';
 import { useQuery } from './../../hooks/useQuery';
 
@@ -187,23 +186,7 @@ export function VideoRoom() {
       ref={ videoContainerRef }
     >
     </div>
-
     <CaptionBar captions={captions} className={classes.captionsBar} />
-    <CaptionBox captions={captions} />
-    <Button 
-        sx={{
-          border: '1px solid',
-          p: 1,
-          borderRadius: 2,
-          position: 'absolute',
-          top: 40,
-          right: 10,
-          pt: 0,
-          pb: 0,
-          zIndex: 'tooltip',
-        }}
-        onClick={toggleIsCaptioning} >{isCaptioning? 'Disable' : 'Enable'} Caption for Session</Button>
-
     <ControlToolBar
       className={classes.controlToolbar}
       hasAudio={hasAudio}
@@ -214,5 +197,20 @@ export function VideoRoom() {
       isCaptioning={isCaptioning && subToCaptions}
       handleCaptionMicClick={toggleSubToCaptions}
     />
+    <Button 
+      className={classes.captionsButton}
+      sx={{
+        p: 1,
+        border: '1px solid',
+        borderRadius: 2,
+        position: 'absolute',
+        top: '3%',
+        left: '1%',
+        pt: 0,
+        pb: 0,
+        zIndex: 'tooltip',
+      }}
+      onClick={toggleIsCaptioning} >{isCaptioning? 'disable' : 'enable'} CC for Session</Button>
+      <CaptionBox captions={captions} />
   </Stack>);
 }

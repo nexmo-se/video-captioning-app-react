@@ -40,16 +40,15 @@ export const CaptionBox = React.memo(
           p: 1,
           borderRadius: 2,
           position: 'absolute',
-          bottom: 10,
-          right: 10,
+          bottom: '3%',
+          right: '1%',
           pt: 0,
           pb: 0,
           zIndex: 'tooltip',
         }}
-        onClick={handleClickOpen()}>Transcription</Button>
-
+        onClick={handleClickOpen()}>Transcr.</Button>
       <Dialog
-        PaperProps={{ sx: { position: "fixed", top: 100, right: 10, m: 0, bottom: 60} }}
+        PaperProps={{ sx: { position: "fixed", top: 80, right: 10, m: 0, bottom: 80} }}
         fullWidth={true}
         maxWidth="sm"
         open={open}
@@ -66,7 +65,7 @@ export const CaptionBox = React.memo(
             tabIndex={-1}
             textAlign="left"
           ></DialogContentText>
-          {captions.map((caption, index) => 
+          {captions.filter(c => c.isFinal).map((caption, index) => 
             <Typography key={`caption-${index}`} variant="body1" gutterBottom textAlign="left" >
             [{caption.timestamp}] {caption.speaker}: {caption.text}
             </Typography> 

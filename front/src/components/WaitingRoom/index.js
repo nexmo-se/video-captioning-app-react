@@ -1,15 +1,13 @@
 import { useContext, useEffect, useRef, useState, useCallback } from 'react';
-import OT from '@opentok/client';
+
 import { useNavigate } from 'react-router-dom';
 import useStyles from './styles';
 
 import { UserContext } from '../../context/UserContext';
-import { useQuery } from './../../hooks/useQuery';
 import { usePublisher } from '../../hooks/usePublisher';
 import { AudioSettings } from '../AudioSetting';
 import { VideoSettings } from '../VideoSetting';
 
-import { getSourceDeviceId } from '../../utils';
 import {
   TextField,
   List,
@@ -31,23 +29,14 @@ const publisherOptions = {
 
 const rooms = ['Room A', 'Room B', 'Room C'];
 export function WaitingRoom() {
-  let query = useQuery();
   const classes = useStyles();
   
   const { user, setUser } = useContext(UserContext);
-
-  // const username = query.get('username')
-  //   ? query.get('username')
-  //   : user.username;
 
   const navigate = useNavigate();
 
   const [localAudio, setLocalAudio] = useState(defaultLocalAudio);
   const [localVideo, setLocalVideo] = useState(defaultLocalVideo);
-
-  const [localVideoSource, setLocalVideoSource] = useState(undefined);
-  const [localAudioSource, setLocalAudioSource] = useState(undefined);
-  const [localAudioOutput, setLocalAudioOutput] = useState(undefined);
 
   const [audioDevice, setAudioDevice] = useState('');
   const [videoDevice, setVideoDevice] = useState('');
@@ -74,36 +63,6 @@ export function WaitingRoom() {
   const handleVideoChange = useCallback((e) => {
     setLocalVideo(e.target.checked);
   }, []);
-
-  const handleVideoSource = useCallback(
-    (e) => {
-      const videoDeviceId = e.target.value;
-      setVideoDevice(e.target.value);
-      publisher.setVideoSource(videoDeviceId);
-      setLocalVideoSource(videoDeviceId);
-    },
-    [publisher]
-  );
-
-  const handleAudioSource = useCallback(
-    (e) => {
-      const audioDeviceId = e.target.value;
-      setAudioDevice(audioDeviceId);
-      publisher.setAudioSource(audioDeviceId);
-      setLocalAudioSource(audioDeviceId);
-    },
-    [publisher]
-  );
-
-  const handleAudioOutput = useCallback(
-    (e) => {
-      const audioOutputId = e.target.value;
-      setAudioOutputDevice(audioOutputId);
-      OT.setAudioOutputDevice(audioOutputId);
-      setLocalAudioOutput(audioOutputId);
-    },
-    []
-  );
 
   const handleJoinClick = () => {
     if (!user.username) {
@@ -138,62 +97,26 @@ export function WaitingRoom() {
   }, [localVideo, publisher]);
 
   useEffect(() => {
-    if (publisher && pubInitialised && deviceInfo) {
-      const currentAudioDevice = publisher.getAudioSource();
-      setAudioDevice(
-        getSourceDeviceId(
-          deviceInfo.audioInputDevices, 
-          currentAudioDevice
-        )
-      );
-
-      const currentVideoDevice = publisher.getVideoSource();
-      setVideoDevice(
-        getSourceDeviceId(
-          deviceInfo.videoInputDevices,
-          currentVideoDevice?.track
-        )
-      );
-
-      OT.getActiveAudioOutputDevice().then((currentAudioOutputDevice) => {
-        setAudioOutputDevice(currentAudioOutputDevice.deviceId);
-      });
-    }
-    
-  }, [
-    deviceInfo,
-    publisher,
-    setAudioDevice,
-    setVideoDevice,
-    setAudioOutputDevice,
-    pubInitialised,
-  ]);
-
-  useEffect(() => {
     return () => {
       destroyPublisher();
     };
   }, [destroyPublisher]);
 
   useEffect(() => {
-    setUser({
+    let _user = {
       ...user,
       defaultSettings: {
         publishAudio: localAudio,
         publishVideo: localVideo,
-        audioSource: localAudioSource,
-        videoSource: localVideoSource,
-        audioOutput: localAudioOutput,
       }
-    });
+    }
+
+    setUser({..._user});
   }, [
     user,
     setUser,
     localAudio,
     localVideo,
-    localAudioSource,
-    localVideoSource,
-    localAudioOutput,
   ]);
 
   return (
@@ -220,81 +143,8 @@ export function WaitingRoom() {
 
       <List
         disablePadding
-        sx={{ 
-          width: '100%', 
-          maxWidth: 360
-        }}>
-      
-      <ListItem disablePadding>
-      <FormControl margin="dense">
-        <InputLabel id="audio-output">Select Audio Output</InputLabel>
-        {deviceInfo.audioOutputDevices && (
-          <Select
-            labelId="audio-output"
-            id="audio-output-select"
-            value={audioOutputDevice}
-            onChange={handleAudioOutput}
-            sx={{ 
-              width: 360,
-            }}
-          >
-            {deviceInfo.audioOutputDevices.map((device, index) => (
-              <MenuItem key={index} value={device.deviceId}>
-                {device.label}
-              </MenuItem>
-            ))}
-          </Select>
-        )}
-      </FormControl>
-      </ListItem>
+        sx={{ width: '100%', maxWidth: 360}}>
 
-      <ListItem disablePadding>
-      <FormControl margin="dense">
-        <InputLabel id="audio-input">
-          Select Audio Source
-        </InputLabel>
-        {deviceInfo.audioInputDevices && (
-        <Select
-          labelId="audio-input"
-          id="audio-intput-select"
-          value={audioDevice}
-          onChange={handleAudioSource}
-          sx={{ 
-            width: 360,
-          }}
-        >
-          {deviceInfo.audioInputDevices.map((device, index) => (
-            <MenuItem key={index} value={device.deviceId}>
-              {device.label}
-            </MenuItem>
-          ))}
-        </Select>
-        )}
-      </FormControl>
-      </ListItem>
-      
-      <ListItem disablePadding>
-      <FormControl margin="dense">
-        <InputLabel id="video">Select Video Source</InputLabel>
-        {deviceInfo.videoInputDevices && (
-          <Select
-            labelId="video"
-            id="video-select"
-            value={videoDevice}
-            onChange={handleVideoSource}
-            sx={{ 
-              width: 360,
-            }}
-          >
-          {deviceInfo.videoInputDevices.map((device, index) => (
-            <MenuItem key={index} value={device.deviceId}>
-              {device.label}
-            </MenuItem>
-          ))}
-          </Select>
-        )}
-      </FormControl>
-      </ListItem>
       <ListItem disablePadding>
       <FormControl margin="dense">
         <InputLabel id="room-list">Select Room</InputLabel>
@@ -317,6 +167,7 @@ export function WaitingRoom() {
         )}
       </FormControl>
       </ListItem>
+
       <ListItem disablePadding>
       <FormControl margin="dense">
         <TextField
@@ -326,9 +177,7 @@ export function WaitingRoom() {
           onChange={(event) => {
             setUser({...user, username: event.target.value});
           }}
-          sx={{ 
-            width: 360,
-          }}
+          sx={{ width: 360 }}
         />
         </FormControl>
         </ListItem>
