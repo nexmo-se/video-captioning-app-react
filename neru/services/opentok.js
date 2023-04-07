@@ -78,20 +78,20 @@ module.exports = () => ({
     }
   },
 
-  async sendSignal (sessionId, type, data) {
-    return new Promise((resolve, reject) => {
-      const payload = { type, data };
-      payload.data = payload.data || '';
-      if (typeof payload.data === 'object') payload.data = JSON.stringify(payload.data);
+  async sendSignal (sessionId, type) {
+    try {
+      const payload = { type, data: '' };
       opentok.signal(sessionId, null, payload, function (err) {
         if (err) {
           console.log(`send Signal ${ err.message || 'failed'}`);
-          resolve(false);
+          return Promise.resolve(false);
         } else {
-          resolve(true);
+          return Promise.resolve(true);
         }
       });
-    });
+    } catch (err) {
+      throw `send Signal - ${ err.message || 'failed'}`;
+    }
   },
 
 });

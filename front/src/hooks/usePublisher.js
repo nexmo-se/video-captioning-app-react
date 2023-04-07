@@ -50,15 +50,15 @@ export function usePublisher({ container }) {
 
   const initPublisher = useCallback(
     ({container, publisherOptions}) => {
-      console.log('[UsePublisher] - initPublisher called');
+      // console.log('[UsePublisher] - initPublisher called');
 
       if (publisherRef.current) {
-        console.log('[UsePublisher] - initPublisher - already initiated');
+        // console.log('[UsePublisher] - initPublisher - already initiated');
         return;
       }
 
       const finalPublisherOptions = Object.assign({}, defaultPublisherOptions, publisherOptions);
-      console.log('[UsePublisher] - finalPublisherOptions', finalPublisherOptions);
+      // console.log('[UsePublisher] - finalPublisherOptions', finalPublisherOptions);
       
       publisherRef.current = OT.initPublisher(
         container.current.id,
@@ -68,7 +68,7 @@ export function usePublisher({ container }) {
             console.log('[UsePublisher] - initPublisher err', err);
             publisherRef.current = null;
           } else {
-            console.log('[UsePublisher] - initPublisher done');
+            // console.log('[UsePublisher] - initPublisher done');
           }
         }
       );
@@ -113,7 +113,7 @@ export function usePublisher({ container }) {
               publisherRef.current = null;
               return reject(err);
             } else {
-              console.log('[UsePublisher] - session.publish done');
+              // console.log('[UsePublisher] - session.publish done');
               resolve(publisherRef.current);
             }
           });
@@ -169,7 +169,7 @@ export function usePublisher({ container }) {
               setSubscriber(null);
               return reject(null);
             } else {
-              console.log('[usePublisher] - session.subscribe done');
+              // console.log('[usePublisher] - session.subscribe done');
               subscriber.streamName = `${subscriber.stream.name}`;
               setSubscriber(subscriber);
               resolve(subscriber);

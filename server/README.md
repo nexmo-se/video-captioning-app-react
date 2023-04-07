@@ -4,10 +4,11 @@ check `./services/index.js` for sample code for for Live Captions — REST API: 
 
 ## Prerequisites
 - Vonage API account 
+- Early Access for VCP/NeRu
 
 ## Install
 
-npm install
+- `npm install`
 
 ## Environment variables
 - `OT_API_KEY`, `OT_API_SECRET`:

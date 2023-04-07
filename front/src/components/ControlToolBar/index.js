@@ -13,8 +13,9 @@ export const ControlToolBar = ({
   hasVideo,
   handleMicButtonClick,
   handleVideoButtonClick,
-  currentPublisher,
+  // currentPublisher,
   isCaptioning,
+  subToCaptions,
   handleCaptionMicClick,
 }) => {
   // This bar should include mic, camera, chat, screenshare, settings, endCall
@@ -61,7 +62,11 @@ export const ControlToolBar = ({
           hasVideo={hasVideo}
           onClick={handleVideoButtonClick}
         ></VideoButton>
-        <CaptionButton isCaptioning={isCaptioning} handleClick={handleCaptionMicClick} />
+        <CaptionButton 
+          isCaptioning={isCaptioning}
+          subToCaptions={subToCaptions} 
+          handleClick={handleCaptionMicClick} 
+        />
       </div>
     </div>
   );

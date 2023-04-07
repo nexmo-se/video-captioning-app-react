@@ -14,7 +14,10 @@ check `./services/index.js` for sample code for for Live Captions — REST API: 
 ## Environment variables
 - `OT_API_KEY`, `OT_API_SECRET`:
     Vonage Video Project API KEY and API SECRET.
-
+- `CAPTION_MAX_DURATION` (Optional) :
+	The maximum allowed duration for the audio captioning. 
+	The default value set by the demo app is 30 minutes, 
+	The maximum allowed duration by Video API is 4 hours.
 
 ## Available Scripts
 

@@ -43,7 +43,7 @@ export function useSession() {
   
   const createSession = useCallback(({ apikey, sessionId, token }) => {
     if (connected) {
-      console.log('[UseSession] - createSession already connected');
+      // console.log('[UseSession] - createSession already connected');
       return;
     }
     if (!apikey) {
@@ -64,14 +64,14 @@ export function useSession() {
     return new Promise((resolve, reject) => {
       sessionRef.current.connect(token, (err) => {
         if (!sessionRef.current) {
-          console.log('[UseSession] - createSession already exists');
+          // console.log('[UseSession] - createSession already exists');
           return;
         }
         if (err) {
           console.log('[UseSession] - createSession err', err);
           reject(err);
         } else if (!err) {
-          console.log('[UseSession] - createSession done');
+          // console.log('[UseSession] - createSession done');
           setConnected(true);
           resolve(sessionRef.current);
         }

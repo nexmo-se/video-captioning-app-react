@@ -57,7 +57,7 @@ export function useSubscriber({ container }) {
                   console.log('[useSubscriber] - session.subscribe err');
                   return reject(null);
                 } else {
-                  console.log('[useSubscriber] - session.subscribe done');
+                  // console.log('[useSubscriber] - session.subscribe done');
                   subscriber.streamName = `${subscriber.stream.name}`;
                   addSubscriber(subscriber);
                   resolve(subscriber);
