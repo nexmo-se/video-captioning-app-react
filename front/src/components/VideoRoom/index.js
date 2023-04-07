@@ -152,6 +152,7 @@ export function VideoRoom() {
 
   useEffect(() => {
     if (subscriber) {
+      // local client [self-subscribe]
       publisher.publishAudio(hasAudio);
       subscriber.off('captionReceived');
       if (isCaptioning && subToCaptions) {
@@ -163,6 +164,7 @@ export function VideoRoom() {
 
   useEffect(() => {
     if (subscribers) {
+      // remote clients 
       for (const subscriber of subscribers) {
         subscriber.off('captionReceived');
         if (isCaptioning && subToCaptions) {
@@ -193,8 +195,9 @@ export function VideoRoom() {
       hasVideo={hasVideo}
       handleMicButtonClick={toggleAudio}
       handleVideoButtonClick={toggleVideo}
-      currentPublisher={publisher}
-      isCaptioning={isCaptioning && subToCaptions}
+      // currentPublisher={publisher}
+      isCaptioning={isCaptioning}
+      subToCaptions={!!isCaptioning && !!subToCaptions}
       handleCaptionMicClick={toggleSubToCaptions}
     />
     <Button 

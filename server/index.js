@@ -9,11 +9,11 @@ const indexRouter = require('./routes');
 const app = express();
 
 app.use(logger('dev', { skip: (req) => {
-  const regex = /^(\/.*\/)/;
-  const found = req.path.match(regex);
-  return found
-    ? ['/js/', '/_/', '/api/room/'].includes(found[0]) 
-    : ['/favicon.ico', '/', '/api/room/room-1/token'].includes(req.path);
+  const p = req.path.split('/');
+  return (p && p.length)
+    ? ['/_', '/static', '/favicon.ico', '/manifest.json'].includes(`/${p[1]}`) 
+      || '/api/room/_/token' === `/${p[1]}/${p[2]}/_/${p[4]}/`
+    : false;
 }}));
 app.use(cors());
 app.use(express.json());
