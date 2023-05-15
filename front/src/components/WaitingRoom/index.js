@@ -1,9 +1,8 @@
 import { useContext, useEffect, useRef, useState, useCallback } from 'react';
-
 import { useNavigate } from 'react-router-dom';
 import useStyles from './styles';
-
 import { UserContext } from '../../context/UserContext';
+import { useQuery } from './../../hooks/useQuery';
 import { usePublisher } from '../../hooks/usePublisher';
 import { AudioSettings } from '../AudioSetting';
 import { VideoSettings } from '../VideoSetting';
@@ -28,21 +27,21 @@ const publisherOptions = {
 };
 
 const rooms = ['Room A', 'Room B', 'Room C'];
+
 export function WaitingRoom() {
   const classes = useStyles();
-  
   const { user, setUser } = useContext(UserContext);
-
   const navigate = useNavigate();
+
+  const query = useQuery();
+  const _roomId = query.get('room')
+    ? query.get('room')
+    : 'room-0';
 
   const [localAudio, setLocalAudio] = useState(defaultLocalAudio);
   const [localVideo, setLocalVideo] = useState(defaultLocalVideo);
 
-  const [audioDevice, setAudioDevice] = useState('');
-  const [videoDevice, setVideoDevice] = useState('');
-  const [audioOutputDevice, setAudioOutputDevice] = useState('');
-
-  const [roomId, setRoomId] = useState('room-0');
+  const [roomId, setRoomId] = useState(_roomId);
 
   const waitingRoomVideoContainerRef = useRef();
 
@@ -103,15 +102,14 @@ export function WaitingRoom() {
   }, [destroyPublisher]);
 
   useEffect(() => {
-    let _user = {
+    setUser({
       ...user,
       defaultSettings: {
         publishAudio: localAudio,
         publishVideo: localVideo,
       }
-    }
-
-    setUser({..._user});
+    });
+    localStorage.setItem('username', user.username);
   }, [
     user,
     setUser,
@@ -144,19 +142,19 @@ export function WaitingRoom() {
       <List
         disablePadding
         sx={{ width: '100%', maxWidth: 360}}>
-
       <ListItem disablePadding>
-      <FormControl margin="dense">
-        <InputLabel id="room-list">Select Room</InputLabel>
+
+      <FormControl margin="dense" fullWidth>
+        <InputLabel id="room-list-select-label">*Select Room</InputLabel>
         {rooms && (
           <Select
-            labelId="room-list"
+            labelId="room-list-select-label"
             id="room-list-select"
             value={roomId}
             onChange={(event) => {
               setRoomId(event.target.value);
             }}
-            sx={{ width: 360 }}
+            label="*Select Room"
           >
             {rooms.map((room, index) => (
               <MenuItem key={index} value={`room-${index}`}>
@@ -166,10 +164,11 @@ export function WaitingRoom() {
           </Select>
         )}
       </FormControl>
-      </ListItem>
 
+      </ListItem>
       <ListItem disablePadding>
-      <FormControl margin="dense">
+
+      <FormControl margin="dense" fullWidth>
         <TextField
           id="username"
           label="*Your Name"
@@ -177,9 +176,9 @@ export function WaitingRoom() {
           onChange={(event) => {
             setUser({...user, username: event.target.value});
           }}
-          sx={{ width: 360 }}
         />
         </FormControl>
+
         </ListItem>
       </List>
 

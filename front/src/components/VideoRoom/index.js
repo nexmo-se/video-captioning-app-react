@@ -5,41 +5,37 @@ import React, {
   useState,
   useCallback
 } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Button,
   Stack,
 } from '@mui/material';
 import useStyles from './styles';
-import { useQuery } from './../../hooks/useQuery';
 
 import { getCredentials } from '../../api/credentials';
 import { updateCaptions } from '../../api/captions';
-
 import { UserContext } from '../../context/UserContext';
 import { CaptionsContext } from '../../context/CaptionsContext';
-
+import { useQuery } from './../../hooks/useQuery';
 import { usePublisher } from '../../hooks/usePublisher';
 import { useSession } from '../../hooks/useSession';
-import { useSubscriber } from '../../hooks/useSubscriber';
-
 import { ControlToolBar } from '../ControlToolBar';
 import { CaptionBar } from '../CaptionBar';
-
 import { CaptionBox } from '../CaptionBox';
 
 export function VideoRoom() {
-  const query = useQuery();
   const classes = useStyles();
-
-  const roomId = query.get('room')
-    ? query.get('room')
-    : 'room-0'
-
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
+
+  const query = useQuery();
+  const _roomId = query.get('room')
+    ? query.get('room')
+    : 'room-0';
+
   const { captions, toggleSubscribeToCaptions, onCaptionReceived } = useContext(CaptionsContext);
 
   const [credentials, setCredentials] = useState(null);
-
   const [hasAudio, setHasAudio] = useState(user.defaultSettings.publishAudio);
   const [hasVideo, setHasVideo] = useState(user.defaultSettings.publishVideo);
 
@@ -62,24 +58,21 @@ export function VideoRoom() {
     session,
     createSession, 
     connected,
-    streams,
     isCaptioning, 
     setIsCaptioning,
-   } = useSession();
-
-  const {
     subscribers,
-    subscribe,
-  } = useSubscriber({
-    container: videoContainerRef,
+   } = useSession({
+    container: videoContainerRef
   });
 
   const toggleAudio = useCallback(() => {
     setHasAudio((prevAudio) => !prevAudio);
   }, []);
+
   const toggleVideo = useCallback(() => {
     setHasVideo((prevVideo) => !prevVideo);
   }, []);
+
   const toggleIsCaptioning = useCallback(() => {
     const { sessionId } = credentials;
     const action = isCaptioning === false? 'start' : 'stop';
@@ -92,7 +85,14 @@ export function VideoRoom() {
   }, []);
 
   useEffect(() => {
-    getCredentials(roomId).then(({ apikey, sessionId, token, captionsId }) => {
+    let _username = localStorage.getItem('username');
+    if (!_username) {
+      navigate({
+        pathname: '/waiting-room',
+        search: `?room=${_roomId}`,
+      });
+    }
+    getCredentials(_roomId).then(({ apikey, sessionId, token, captionsId }) => {
       setCredentials({ apikey, sessionId, token });
       if (captionsId) setIsCaptioning(true);
     });
@@ -106,7 +106,7 @@ export function VideoRoom() {
 
   useEffect(() => {
     if (session && connected && !pubInitialised) {
-      const publisherOptions = {
+      let publisherOptions = {
         publishAudio: hasAudio,
         publishVideo: hasVideo,
         name: user.username, 
@@ -138,17 +138,6 @@ export function VideoRoom() {
       });
     }
   }, [subscribeSelf, session, connected, pubInitialised, stream, subscriber]);
-
-  useEffect(() => {
-    if (session && streams) {
-      const res = subscribe({
-        session,
-        streams,
-      });
-      res.then(() => {
-      }).catch(console.log);
-    }
-  }, [subscribe, session, streams]);
 
   useEffect(() => {
     if (subscriber) {

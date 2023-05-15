@@ -1,5 +1,5 @@
 import { useCallback, useState, 
-  //useEffect, useContext
+  // useEffect, useContext
 } from 'react';
 
 const defaultSubscriberOptions = {
@@ -14,63 +14,48 @@ const defaultSubscriberOptions = {
   fitMode: 'contain'
 };
 
-export function useSubscriber({ container }) {
+export function useSubscriber() {
   const [subscribers, setSubscribers] = useState([]);
 
-  const addSubscriber = useCallback(
-    (subscriber) => {
-      setSubscribers((prev) => [...prev, subscriber]);
+  const addSubscriber = (subscriber) => {
+    setSubscribers((prev) => [...prev, subscriber]);
+  };
+
+  const removeSubscriber = (streamId) => {
+    setSubscribers((prev) =>
+      prev.filter((prevSubscriber) => prevSubscriber.stream && prevSubscriber.stream.id !== streamId)
+    );
+  };
+
+  const subscribe = async ( stream, session, container ) => {
+    if (!session || !container) {
+      return;
     }
-    , [setSubscribers]);
-
-  const removeSubscriber = useCallback(
-    (streamId) => {
-      setSubscribers((prev) =>
-        prev.filter((prev) => prev.stream && prev.stream.id !== streamId)
-      );
-    }
-    , [setSubscribers]);
-
-  const subscribe = useCallback(
-    async ( {session, streams}) => {
-      if (!session || !container.current) {
-        return;
-      }
-      const newStreamIds = streams.map(stream => stream.id);
-      const oldStreamIds = subscribers.map(subscriber => subscriber.stream && subscriber.stream.id);
-
-      oldStreamIds.forEach(oldStreamId => {
-        if (!newStreamIds.includes(oldStreamId)) removeSubscriber(oldStreamId);
-      });
-
-      const finalOptions = Object.assign({}, defaultSubscriberOptions);
-
-      return await Promise.all(streams.map(async (stream) => {
-        if (!oldStreamIds.includes(stream.id)) {
-          return await new Promise((resolve, reject) => {
-            const subscriber = session.subscribe(
-              stream,
-              container.current.id,
-              finalOptions, 
-              (err) => {
-                if (err) {
-                  console.log('[useSubscriber] - session.subscribe err');
-                  return reject(null);
-                } else {
-                  // console.log('[useSubscriber] - session.subscribe done');
-                  subscriber.streamName = `${subscriber.stream.name}`;
-                  addSubscriber(subscriber);
-                  resolve(subscriber);
-                }
-              }
-            );
-          });
+    let finalOptions = Object.assign({}, defaultSubscriberOptions);
+    return new Promise((resolve, reject) => {
+      let subscriber = session.subscribe(
+        stream,
+        container,
+        finalOptions, 
+        (err) => {
+          if (err) {
+            console.log('[useSubscriber] - session.subscribe err');
+            return reject(null);
+          } else {
+            // console.log('[useSubscriber] - session.subscribe done');
+            subscriber.streamName = `${subscriber.stream.name}`;
+            addSubscriber(subscriber);
+            resolve(subscriber);
+          }
         }
-      }));
-    }, [addSubscriber, container, removeSubscriber, subscribers]);
+      );
+      // subscriber.on("x", fun);
+    });
+  };
 
   return {
     subscribers,
     subscribe,
+    removeSubscriber,
   };
 }

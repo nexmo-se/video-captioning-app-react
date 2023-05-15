@@ -13,6 +13,7 @@ const defaultPublisherOptions = {
 };
 
 export function usePublisher({ container }) {
+  const [isPublishing, setIsPublishing] = useState(false);
   const [pubInitialised, setPubInitialised] = useState(false);
   const [stream, setStream] = useState(null);
   const [subscriber, setSubscriber] = useState(null);
@@ -25,22 +26,26 @@ export function usePublisher({ container }) {
   }, []);
 
   const streamDestroyedListener = useCallback(() => {
+    publisherRef.current = null;
+    setPubInitialised(false);
+    setIsPublishing(false);
     setStream(null);
   }, []);
 
   const videoElementCreatedListener = useCallback(({ element }) => {
+    setPubInitialised(true);
     setVideoElement(element);
   }, []);
 
   const destroyedListener = useCallback(() => {
-    publisherRef.current = null;
-    setPubInitialised(false);
+    console.log('[UsePublisher] publisher destroyed');
+    //publisherRef.current = null;
+    //setPubInitialised(false);
     setStream(null);
     setSubscriber(null);
   }, []);
 
   const accessAllowedListener = useCallback(async () => {
-    setPubInitialised(true);
   }, []);
 
   const accessDeniedListener = useCallback(() => {
@@ -83,14 +88,15 @@ export function usePublisher({ container }) {
       setPubInitialised(true);
     },
     [
-      destroyedListener,
-      videoElementCreatedListener,
       streamCreatedListener,
       streamDestroyedListener,
       accessAllowedListener,
       accessDeniedListener,
-      setPubInitialised,
     ]);
+
+  // const destroyPublisher = useCallback(() => {
+  //   if (publisherRef.current) publisherRef.current.destroy();
+  // }, []);
 
   const destroyPublisher = useCallback(() => {
     if (publisherRef.current && pubInitialised) {
@@ -105,15 +111,17 @@ export function usePublisher({ container }) {
         initPublisher({container, publisherOptions});
       }
 
-      if (session && publisherRef.current && !stream) {
+      if (session && publisherRef.current && !isPublishing) {
         return new Promise((resolve, reject) => {
           session.publish(publisherRef.current, (err) => {
             if (err) {
               console.log('[UsePublisher] - session.publish err', err);
+              setIsPublishing(false);
               publisherRef.current = null;
               return reject(err);
             } else {
               // console.log('[UsePublisher] - session.publish done');
+              setIsPublishing(true);
               resolve(publisherRef.current);
             }
           });
@@ -122,31 +130,30 @@ export function usePublisher({ container }) {
     },
     [
       initPublisher, 
-      stream,
-      container,
+      isPublishing,
     ]
   );
 
   const unpublish = useCallback(
     ({ session }) => {
-      if (publisherRef.current && subscriber) {
+      if (subscriber) {
         session.unsubscribe(subscriber);
         setSubscriber(null);
       }
-      if (publisherRef.current && stream) {
+      if (publisherRef.current && isPublishing) {
         session.unpublish(publisherRef.current);
-        setStream(null);
+        setIsPublishing(false);
       }
       publisherRef.current = null;
-    }, [stream, subscriber]);
+    }, [isPublishing, publisherRef]);
 
   const subscribeSelf = 
-    ({ session, stream }) => {
-      if (!session || !container.current) {
+    ({session, stream}) => {
+      if (!session) {
         return;
       }
       return new Promise((resolve, reject) => {
-        const subscriber = session.subscribe (
+        const subscriber = session.subscribe(
           stream,
           videoElement,
           {

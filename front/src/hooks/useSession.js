@@ -1,13 +1,32 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import OT from '@opentok/client';
 
-export function useSession() {
+import { useSubscriber } from './useSubscriber';
+
+export function useSession({ container }) {
   const [connected, setConnected] = useState(false);
   const [streams, setStreams] = useState([]);
 
   const [isCaptioning, setIsCaptioning] = useState(false);
 
   const sessionRef = useRef(null);
+
+  const {
+    subscribers,
+    subscribe,
+    removeSubscriber,
+  } = useSubscriber();
+
+  const addStream = (stream) => {
+    setStreams((prev) => [...prev, stream]);
+  };
+
+  const removeStream = (stream) => {
+    setStreams((prev) =>
+      prev.filter((prevStream) => prevStream.id !== stream.id)
+    );
+    removeSubscriber(stream.id);
+  };
 
   const onSignalCaptionsStarted = useCallback((event) => {
     setIsCaptioning(true);
@@ -17,30 +36,29 @@ export function useSession() {
     setIsCaptioning(false);
   }, []);
 
-  const onStreamCreated = useCallback(({ stream }) => {
-    if (!streams.find(el => el.id === stream.id)) {
-      setStreams((prev) => [...prev, stream]);
-    }
-  }, []);
-
-  const onStreamDestroyed = useCallback((event) => {
-    setStreams((prev) =>
-      prev.filter((prev) => prev.id !== event.stream.id)
+  const onStreamCreated = ({ stream }) => {
+    subscribe(
+      stream,
+      sessionRef.current,
+      container.current.id,
+      isCaptioning,
     );
-  }, []);
-
-  const onSessionDisconnected = useCallback((event) => {
-    if (sessionRef.current) sessionRef.current = null;
-  }, []);
-
-  const eventHandlers = {
-    streamCreated: onStreamCreated,
-    streamDestroyed: onStreamDestroyed,
-    sessionDisconnected: onSessionDisconnected,
-    'signal:captions:started': onSignalCaptionsStarted,
-    'signal:captions:stopped': onSignalCaptionsStopped,
+    addStream(stream);
   };
-  
+
+  const onStreamDestroyed = ({ stream }) => {
+    removeStream(stream);
+  };
+
+
+  const onSessionConnected = (event) => {
+    console.log('[UseSession] - onSessionConnected');
+  };
+
+  const onSessionDisconnected = (event) => {
+    sessionRef.current = null;
+  };
+
   const createSession = useCallback(({ apikey, sessionId, token }) => {
     if (connected) {
       // console.log('[UseSession] - createSession already connected');
@@ -58,8 +76,14 @@ export function useSession() {
 
     sessionRef.current = OT.initSession(apikey, sessionId);
 
-    sessionRef.current.off(eventHandlers);
-    sessionRef.current.on(eventHandlers);
+    sessionRef.current.on({
+    streamCreated: onStreamCreated,
+    streamDestroyed: onStreamDestroyed,
+    sessionConnected: onSessionConnected,
+    sessionDisconnected: onSessionDisconnected,
+    'signal:captions:started': onSignalCaptionsStarted,
+    'signal:captions:stopped': onSignalCaptionsStopped,
+  });
 
     return new Promise((resolve, reject) => {
       sessionRef.current.connect(token, (err) => {
@@ -69,6 +93,7 @@ export function useSession() {
         }
         if (err) {
           console.log('[UseSession] - createSession err', err);
+          setConnected(false);
           reject(err);
         } else if (!err) {
           // console.log('[UseSession] - createSession done');
@@ -79,20 +104,19 @@ export function useSession() {
     });
 
   }, [
-    onStreamDestroyed, 
-    onSessionDisconnected, 
     onStreamCreated,
-    connected,
+    onStreamDestroyed, 
+    onSessionConnected,
+    onSessionDisconnected,
+    onSignalCaptionsStarted,
+    onSignalCaptionsStopped,
   ]);
 
   const destroySession = useCallback(() => {
-    if (sessionRef.current) {
-      sessionRef.current.on('disconnected', () => {
-        sessionRef.current = null;
-      });
+    if (sessionRef.current && connected) {
       sessionRef.current.disconnect();
-      sessionRef.current = null;
     }
+    sessionRef.current = null;
   }, []);
 
   return {
@@ -100,8 +124,8 @@ export function useSession() {
     connected,
     createSession,
     destroySession,
-    streams,
     isCaptioning, 
     setIsCaptioning,
+    subscribers,
   };
 }
