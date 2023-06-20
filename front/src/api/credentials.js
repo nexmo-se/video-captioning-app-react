@@ -1,6 +1,7 @@
 export const getCredentials = async (room = 'room-0') => {
   // set in .env.development
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development' 
+      && process.env.REACT_APP_VIDEO_API_KEY) {
     return Promise.resolve({
       apikey: process.env.REACT_APP_VIDEO_API_KEY,
       sessionId: process.env.REACT_APP_VIDEO_SESSION,

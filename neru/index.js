@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const logger = require('morgan');
 
 const services = require('./services');
@@ -14,6 +15,7 @@ app.use(logger('dev', { skip: (req) => {
       || '/api/room/_/token' === `/${p[1]}/${p[2]}/_/${p[4]}/`
     : false;
 }}));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(__dirname + '/public'));

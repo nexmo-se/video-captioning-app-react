@@ -48,12 +48,8 @@ export function WaitingRoom() {
   const {
     publisher,
     initPublisher,
-    destroyPublisher,
-    deviceInfo,
     pubInitialised,
-  } = usePublisher({
-    container: waitingRoomVideoContainerRef
-  });
+  } = usePublisher();
 
   const handleAudioChange = useCallback((e) => {
     setLocalAudio(e.target.checked);
@@ -94,12 +90,6 @@ export function WaitingRoom() {
       publisher.publishVideo(localVideo);
     }
   }, [localVideo, publisher]);
-
-  useEffect(() => {
-    return () => {
-      destroyPublisher();
-    };
-  }, [destroyPublisher]);
 
   useEffect(() => {
     setUser({

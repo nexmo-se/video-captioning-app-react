@@ -46,13 +46,11 @@ export function VideoRoom() {
   const { 
     publisher, 
     publish, 
-    pubInitialised,
+    isPublishing,
     stream,
     subscriber,
     subscribeSelf,
-  } = usePublisher({
-    container: videoContainerRef
-  });
+  } = usePublisher();
   
   const { 
     session,
@@ -105,18 +103,19 @@ export function VideoRoom() {
   }, [createSession, credentials]);
 
   useEffect(() => {
-    if (session && connected && !pubInitialised) {
+    if (session && connected && !isPublishing) {
       let publisherOptions = {
         publishAudio: hasAudio,
         publishVideo: hasVideo,
         name: user.username, 
       };
       publish({
+        container: videoContainerRef,
         session: session,
         publisherOptions
       });
     }
-  }, [publish, session, connected, pubInitialised]);
+  }, [publish, session, connected, isPublishing]);
 
   useEffect(() => {
     if (publisher) {
@@ -131,13 +130,13 @@ export function VideoRoom() {
   }, [hasVideo, publisher]);
 
   useEffect(() => {
-    if (session && connected && pubInitialised && stream && !subscriber) {
+    if (session && connected && isPublishing && stream && !subscriber) {
       subscribeSelf({
         session,
         stream,
       });
     }
-  }, [subscribeSelf, session, connected, pubInitialised, stream, subscriber]);
+  }, [subscribeSelf, session, connected, isPublishing, stream, subscriber]);
 
   useEffect(() => {
     if (subscriber) {

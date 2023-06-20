@@ -7,7 +7,7 @@ const STATE_HASH_TABLE_ROOMS = 'rooms';
  */
 module.exports = (neru) => ({
   get neruState () {
-    const neruSession = neru.getGlobalSession();
+    const neruSession = neru.getSessionById(`app:${process.env.API_APPLICATION_ID}`);
     const neruState   = new State(neruSession);
     return neruState;
   },

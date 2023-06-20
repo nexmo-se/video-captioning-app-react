@@ -1,6 +1,4 @@
-import { useCallback, useRef, useState, 
-  //useEffect, useContext
-} from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import OT from '@opentok/client';
 
 const defaultPublisherOptions = {
@@ -12,7 +10,7 @@ const defaultPublisherOptions = {
   fitMode: 'contain',
 };
 
-export function usePublisher({ container }) {
+export function usePublisher() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [pubInitialised, setPubInitialised] = useState(false);
   const [stream, setStream] = useState(null);
@@ -22,14 +20,14 @@ export function usePublisher({ container }) {
   const publisherRef = useRef();
 
   const streamCreatedListener = useCallback(({ stream }) => {
+    setIsPublishing(true);
     setStream(stream);
   }, []);
 
   const streamDestroyedListener = useCallback(() => {
-    publisherRef.current = null;
-    setPubInitialised(false);
     setIsPublishing(false);
     setStream(null);
+    setSubscriber(null);
   }, []);
 
   const videoElementCreatedListener = useCallback(({ element }) => {
@@ -39,8 +37,9 @@ export function usePublisher({ container }) {
 
   const destroyedListener = useCallback(() => {
     console.log('[UsePublisher] publisher destroyed');
-    //publisherRef.current = null;
-    //setPubInitialised(false);
+    publisherRef.current = null;
+    setPubInitialised(false);
+    setIsPublishing(false);
     setStream(null);
     setSubscriber(null);
   }, []);
@@ -54,9 +53,7 @@ export function usePublisher({ container }) {
   }, []);
 
   const initPublisher = useCallback(
-    ({container, publisherOptions}) => {
-      // console.log('[UsePublisher] - initPublisher called');
-
+    ({ container, publisherOptions }) => {
       if (publisherRef.current) {
         // console.log('[UsePublisher] - initPublisher - already initiated');
         return;
@@ -88,27 +85,23 @@ export function usePublisher({ container }) {
       setPubInitialised(true);
     },
     [
-      streamCreatedListener,
-      streamDestroyedListener,
       accessAllowedListener,
       accessDeniedListener,
+      streamCreatedListener,
+      streamDestroyedListener,
     ]);
 
-  // const destroyPublisher = useCallback(() => {
-  //   if (publisherRef.current) publisherRef.current.destroy();
-  // }, []);
-
-  const destroyPublisher = useCallback(() => {
+  const destroyPublisher = () => {
     if (publisherRef.current && pubInitialised) {
       publisherRef.current.destroy();
     }
-  }, [pubInitialised]);
+  };
 
   const publish = useCallback(
-    ({ session, publisherOptions }) => {
+    ({ container, session, publisherOptions }) => {
 
       if (!publisherRef.current) {
-        initPublisher({container, publisherOptions});
+        initPublisher({ container, publisherOptions });
       }
 
       if (session && publisherRef.current && !isPublishing) {
@@ -116,8 +109,6 @@ export function usePublisher({ container }) {
           session.publish(publisherRef.current, (err) => {
             if (err) {
               console.log('[UsePublisher] - session.publish err', err);
-              setIsPublishing(false);
-              publisherRef.current = null;
               return reject(err);
             } else {
               // console.log('[UsePublisher] - session.publish done');
@@ -129,23 +120,21 @@ export function usePublisher({ container }) {
       }
     },
     [
-      initPublisher, 
-      isPublishing,
+      initPublisher,
     ]
   );
 
-  const unpublish = useCallback(
-    ({ session }) => {
-      if (subscriber) {
-        session.unsubscribe(subscriber);
-        setSubscriber(null);
-      }
-      if (publisherRef.current && isPublishing) {
-        session.unpublish(publisherRef.current);
-        setIsPublishing(false);
-      }
-      publisherRef.current = null;
-    }, [isPublishing, publisherRef]);
+  const unpublish = ({ session }) => {
+    if (subscriber) {
+      session.unsubscribe(subscriber);
+      setSubscriber(null);
+    }
+    if (publisherRef.current && isPublishing) {
+      session.unpublish(publisherRef.current);
+      setIsPublishing(false);
+    }
+    publisherRef.current = null;
+  };
 
   const subscribeSelf = 
     ({session, stream}) => {
@@ -189,10 +178,11 @@ export function usePublisher({ container }) {
   return {
     publisher: publisherRef.current,
     initPublisher,
-    destroyPublisher,
     publish,
     pubInitialised,
+    isPublishing,
     unpublish,
+    destroyPublisher,
     stream,
     subscriber,
     subscribeSelf,

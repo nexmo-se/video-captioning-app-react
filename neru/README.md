@@ -27,5 +27,5 @@ In the project directory, you can run:
 - Run `npm start` in the `../frontend` to start frontend app
 
 ### `neru deploy` to deploy it to your neru account
-- Before runing `neru deploy`, copy the frontent build directory to `neru/public`: `cd ../front && run npm build && cp ./build ../neru/public`
+- Before runing `neru deploy`, copy the frontent build directory to `neru/public`: `cd ../front && run npm build && cp -rf ./build ../neru/public`
 

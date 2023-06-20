@@ -23,6 +23,7 @@ const start = async (app) => {
       ? { sessionId: process.env.SESSION_ID }
       : await opentok.createSession();
     console.log('[start] - session', session);
+    
     await state.initRooms([session]);
 
     app.listen(PORT, function () {

@@ -50,17 +50,18 @@ export function useSession({ container }) {
     removeStream(stream);
   };
 
-
   const onSessionConnected = (event) => {
-    console.log('[UseSession] - onSessionConnected');
+    setConnected(true);
   };
 
   const onSessionDisconnected = (event) => {
     sessionRef.current = null;
+    setConnected(false);
+    setStreams([]);
   };
 
-  const createSession = useCallback(({ apikey, sessionId, token }) => {
-    if (connected) {
+  const createSession = useCallback(async ({ apikey, sessionId, token }) => {
+    if (sessionRef.current) {
       // console.log('[UseSession] - createSession already connected');
       return;
     }
@@ -87,13 +88,9 @@ export function useSession({ container }) {
 
     return new Promise((resolve, reject) => {
       sessionRef.current.connect(token, (err) => {
-        if (!sessionRef.current) {
-          // console.log('[UseSession] - createSession already exists');
-          return;
-        }
         if (err) {
           console.log('[UseSession] - createSession err', err);
-          setConnected(false);
+          sessionRef.current = null;
           reject(err);
         } else if (!err) {
           // console.log('[UseSession] - createSession done');
@@ -102,7 +99,6 @@ export function useSession({ container }) {
         }
       });
     });
-
   }, [
     onStreamCreated,
     onStreamDestroyed, 
@@ -112,18 +108,19 @@ export function useSession({ container }) {
     onSignalCaptionsStopped,
   ]);
 
-  const destroySession = useCallback(() => {
+  const disconnectSession = () => {
     if (sessionRef.current && connected) {
       sessionRef.current.disconnect();
+      setConnected(false);
     }
     sessionRef.current = null;
-  }, []);
+  };
 
   return {
     session: sessionRef.current,
     connected,
     createSession,
-    destroySession,
+    disconnectSession,
     isCaptioning, 
     setIsCaptioning,
     subscribers,
