@@ -11,8 +11,8 @@
 - Early Access for the Live Captions API
 
 ## Install and Run
-- run it in local, follow steps in `./front/README.md` and `./server/README.md` 
-- debug and deploy in Vonage Cloud Platform/NeRu follow steps in `./front/README.md` and `./neru/README.md` 
+- run it in local, follow steps in `./frontend/README.md` and `./server/README.md` 
+- debug and deploy in Vonage Cloud Platform/VCR follow steps in `./frontend/README.md` and `./server-vcr/README.md` 
 
 
 
